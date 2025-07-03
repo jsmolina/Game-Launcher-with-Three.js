@@ -10,10 +10,11 @@
 
 	let INTERSECTED;
 	let theta = 0;
+	let positiveMovement = false;
 
     const loader = new GLTFLoader();
 	const pointer = new THREE.Vector2();
-	const radius = 3;
+	const radius = 5;
     let gameArray = {};  
 	const gameIndex={
 		pes94: 0,
@@ -46,6 +47,16 @@
 			gltf.scene.position.set(0.0,1.98,0.0);
           	gltf.scene.rotation.set(0.0,1.5,0.0);
     
+          	scene.add( gltf.scene );
+        }, undefined, function ( error ) {
+          	console.error( error );
+        } );
+
+		// Load computer
+        loader.load( 'assets/models/computer.glb', function ( gltf ) {
+			gltf.scene.position.set(0.0,0.98,0.0);
+          	gltf.scene.rotation.set(0.0,0.0,0.0);
+			gltf.scene.scale.set(1.3,1.3,1.3);
           	scene.add( gltf.scene );
         }, undefined, function ( error ) {
           	console.error( error );
@@ -91,7 +102,7 @@
 	// Load pes94 box
 	function Load_PES94(){
 		// Generate game box
-        var geometry = new THREE.BoxGeometry(1,2,0.2);
+        var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Pes94 textures
         var material = [
           new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_left.png") }),
@@ -106,14 +117,14 @@
         //const object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
         gameArray[gameIndex.pes94] = new THREE.Mesh( geometry, material );
 		gameArray[gameIndex.pes94].scale.set(0.3,0.3,0.3);
-		gameArray[gameIndex.pes94].position.set(-0.5,2.34,0.12);
+		gameArray[gameIndex.pes94].position.set(-0.5,2.27,0.12);
 		gameArray[gameIndex.pes94].rotation.set(0.0,80.0,0.0);
 	}
 
 	// Load Hormona box
 	function Load_HORMONA(){
 		// Generate game box
-        var geometry = new THREE.BoxGeometry(1,2,0.2);
+        var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Pes94 textures
         var material = [
           new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_left.png") }),
@@ -127,7 +138,7 @@
         //const object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
         gameArray[gameIndex.hormona] = new THREE.Mesh( geometry, material );
 		gameArray[gameIndex.hormona].scale.set(0.3,0.3,0.3);
-		gameArray[gameIndex.hormona].position.set(-0.2,2.34,0.12);
+		gameArray[gameIndex.hormona].position.set(-0.2,2.27,0.12);
 		gameArray[gameIndex.hormona].rotation.set(0.0,80.0,0.0);
 	}
 
@@ -148,16 +159,21 @@
 	function Animate() {
 		Render();
 		stats.update();
-        controls.update();
+        //controls.update();
 	}
 
 	// Render update
 	function Render() {
-		theta += 0.1;
-        //camera.position.set(radius,radius,radius);
-		//camera.position.x = radius * Math.sin( THREE.MathUtils.degToRad( theta ) );
-		//camera.position.y = radius * Math.sin( THREE.MathUtils.degToRad( theta ) );
-		//camera.position.z = radius * Math.cos( THREE.MathUtils.degToRad( theta ) );
+		if(theta >= 50){ positiveMovement = false; }
+		if(theta <= 0){ positiveMovement = true; }
+		
+		if(positiveMovement){ theta += 0.1;}
+		if(!positiveMovement){theta -= 0.1;}
+
+        camera.position.set(radius,radius,radius);
+		camera.position.x = radius * Math.sin( THREE.MathUtils.degToRad( theta ) );
+		camera.position.y = radius * Math.sin( THREE.MathUtils.degToRad( theta ) );
+		camera.position.z = radius * Math.cos( THREE.MathUtils.degToRad( theta ) );
 		camera.lookAt( scene.position );
 		camera.updateMatrixWorld();
 
