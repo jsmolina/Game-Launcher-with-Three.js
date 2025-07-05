@@ -27,24 +27,16 @@
  		}	
 	}
 
-
 	let stats;
 	let camera, scene, raycaster, renderer,controls;
-
-	let INTERSECTED;
-	let theta = 0;
-	let positiveMovement = false;
-	let focusOnSelf = false;
 
     const loader = new GLTFLoader();
 	const pointer = new THREE.Vector2();
 	const focus = new THREE.Vector3();
+	let intersects;
 	
-	let radius = 5;
-	let camPosX = 5;
-   	let camPosY = 5;
-   	let camPosZ = 5;
-
+	let camPosX, camPosY, camPosZ, camRotX, camRotY, camRotZ;
+   	
 	let pes94 = new Game("Pesadilla del '94");
 	let hormona = new Game("La fiesta de las hormonas");
 	let outcash = new Game("Out of cash");
@@ -102,21 +94,21 @@
           	gltf.scene.rotation.set(0.0,-1.5,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
 			computerCPU.mesh = gltf.scene;
-			computerCPU.id = gltf.scene.id;
-          	computerCPU.name = "PC";
+			computerCPU.id = gltf.scene.children[0].id;
+          	computerCPU.name = "CPU 486 DX2 66MHz";
 			scene.add( computerCPU.mesh );
         }, undefined, function ( error ) {
           	console.error( error );
         } );
 
-		// Load computer cpu
+		// Load computer monitor
         loader.load( 'assets/models/monitor.glb', function ( gltf ) {
 			gltf.scene.position.set(0.025,1.13,0.4);
           	gltf.scene.rotation.set(0.0,-1.5,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
 			computerScreen.mesh = gltf.scene;
-			computerScreen.id = gltf.scene.id;
-          	computerScreen.name = "PC";
+			computerScreen.id = gltf.scene.children[0].children[0].id;
+          	computerScreen.name = "Monitor";
 			scene.add( computerScreen.mesh );
         }, undefined, function ( error ) {
           	console.error( error );
@@ -228,11 +220,16 @@
         controls = new OrbitControls( camera, renderer.domElement );
         controls.minDistance = 1;
         controls.maxDistance = 8;
-        controls.update();
+		controls.enablePan = true;
+		controls.update();
 
 		camPosX = -2;
 		camPosY = 2;
 		camPosZ = 4;
+
+		camRotX = -2;
+		camRotY = 2;
+		camRotZ = 4;
 
 		camera.position.set(camPosX,camPosY,camPosZ);
 		camera.lookAt( scene.position );
@@ -240,6 +237,7 @@
 
 		// Declare events
 		document.addEventListener( 'mousemove', onPointerMove );
+		document.addEventListener('click', onPointerClick );
 		window.addEventListener( 'resize', onWindowResize );
 	}
 
@@ -403,28 +401,64 @@
 		pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	}
 
-	function SmothCamMovement(){
-		var inc = 0.1;
-		var window = 0.3;
+	// Mouse pointer position update event
+	function onPointerClick( event ) {
 
-		/*if(camera.position.z < (camPosZ - window)){
-		   camera.position.z += inc;
-		}
-		if(camera.position.z > (camPosZ + window)){
-			camera.position.z -= inc;
-		}
-		if(camera.position.x < (camPosX - window)){
-			camera.position.x += inc;
-		}
-		if(camera.position.x > (camPosX + window)){
-			camera.position.x -= inc;
-		}
-		if(camera.position.y < (camPosY - window)){
-			camera.position.y += inc;
-		}
-		if(camera.position.y > (camPosY + window)){
-			camera.position.y -= inc;
-		}*/
+		// find intersections
+		raycaster.setFromCamera( pointer, camera );
+		intersects = raycaster.intersectObjects( scene.children, true );
+
+		if ( intersects.length > 0 ) {
+			switch(intersects[0].object.id){
+				case outcash.mesh.id:
+					camPosX = -2;
+					camPosZ = 1;
+					break;
+				case pes94.mesh.id:
+					camPosX = -1.6;
+					camPosZ = 1;
+					break;
+				case hormona.mesh.id:
+					camPosX = -1.2;
+					camPosZ = 1;
+					break;
+				case rio.mesh.id:
+					camPosX = -1.0;
+					camPosZ = 1;
+					break;
+				case gandara.mesh.id:
+					camPosX = -0.8;
+					camPosZ = 1;
+					break;
+				case sk.mesh.id:
+					camPosX = -0.6;
+					camPosZ = 1;
+					break;
+				case biricia.mesh.id:
+					camPosX = -0.4;
+					camPosZ = 1;
+					break;
+				case computerCPU.id:
+					break;
+				case computerScreen.id:
+					camPosX = 0;
+					camPosZ = 2;
+					break;
+				case poster.id:
+					camPosX = 2;	
+					camPosZ = 2;
+					break;
+				default:
+					camPosX = -2;
+					camPosY = 2;
+					camPosZ = 4;
+					break;
+			}
+		} else {
+        	camPosX = -2;
+			camPosY = 2;
+			camPosZ = 4;
+		}	
 	}
 
 	// Animation update
@@ -436,18 +470,42 @@
         controls.update();
 	}
 
+	function CameraCorrection(){
+		if(camera.position.x > (camPosX+0.1)){
+			camera.position.x -= 0.02 ;
+		}
+
+		if(camera.position.x < (camPosX-0.1)){
+			camera.position.x += 0.02 ;
+		}
+
+		if(camera.position.y > (camPosY+0.1)){
+			camera.position.y -= 0.01;
+		}
+
+		if(camera.position.y < (camPosY-0.1)){
+			camera.position.y += 0.01;
+		}
+
+		if(camera.position.z > (camPosZ+0.1)){
+			camera.position.z -= 0.01;
+		}
+
+		if(camera.position.z < (camPosZ-0.1)){
+			camera.position.z += 0.01;
+		}
+	}
+
 	// Render update
 	function Render() {
 		
-		SmothCamMovement();
-
 		controls.target.lerp( focus, 0.01 );
+		CameraCorrection();
 		camera.updateMatrixWorld();
 
 		// find intersections
 		raycaster.setFromCamera( pointer, camera );
-
-		const intersects = raycaster.intersectObjects( scene.children, true );
+		intersects = raycaster.intersectObjects( scene.children, true );
 
 		if ( intersects.length > 0 ) {
 			switch(intersects[0].object.id){
@@ -479,24 +537,25 @@
 					document.getElementById("messageBox").innerHTML = biricia.name;
 					biricia.mesh.getWorldPosition( focus );
 					break;
-				case computerScreen.mesh.id:
+				case computerCPU.id:
+					document.getElementById("messageBox").innerHTML = computerCPU.name;
+					computerCPU.mesh.getWorldPosition( focus );
+					break;
+				case computerScreen.id:
 					document.getElementById("messageBox").innerHTML = computerScreen.name;
-					//computerScreen.mesh.getWorldPosition( focus );
+					computerScreen.mesh.getWorldPosition( focus );
 					break;
 				case poster.id:
 					document.getElementById("messageBox").innerHTML = poster.name;
 					poster.mesh.getWorldPosition( focus );
 					break;
 				default:
-					document.getElementById("messageBox").innerHTML = intersects[0].object.id;
-					
+					document.getElementById("messageBox").innerHTML = "";
 					break;
 			}
 		} else {
-        	//document.getElementById("messageBox").innerHTML = computerScreen.id;// "nothing";
-			//if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-			INTERSECTED = null;
+			document.getElementById("messageBox").innerHTML = "";
+        	//document.getElementById("messageBox").innerHTML = "nothing";
 		}
-
 		renderer.render( scene, camera );
 	}
