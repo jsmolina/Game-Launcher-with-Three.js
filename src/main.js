@@ -53,7 +53,9 @@
 	let sk = new Game("School Kombat");
 	let biricia = new Game("La Biricia");
 
-	let computerScreen = new SceneObject("PC");
+	let computerCPU = new SceneObject("CPU");
+	let computerScreen = new SceneObject("Screen");
+	let keyboard = new SceneObject("Keyboard");
 	let poster = new SceneObject("Poster");
 	let chair = new SceneObject("Silla");
 	let shoes = new SceneObject("Bambas");
@@ -94,15 +96,41 @@
           	console.error( error );
         } );
 
-		// Load computer
-        loader.load( 'assets/models/retro_computer.glb', function ( gltf ) {
+		// Load computer cpu
+        loader.load( 'assets/models/computer.glb', function ( gltf ) {
 			gltf.scene.position.set(0.0,0.83,0.3);
-          	gltf.scene.rotation.set(0.0,0.0,0.0);
-			gltf.scene.scale.set(0.4,0.4,0.4);
+          	gltf.scene.rotation.set(0.0,-1.5,0.0);
+			gltf.scene.scale.set(1.0,1.0,1.0);
+			computerCPU.mesh = gltf.scene;
+			computerCPU.id = gltf.scene.id;
+          	computerCPU.name = "PC";
+			scene.add( computerCPU.mesh );
+        }, undefined, function ( error ) {
+          	console.error( error );
+        } );
+
+		// Load computer cpu
+        loader.load( 'assets/models/monitor.glb', function ( gltf ) {
+			gltf.scene.position.set(0.025,1.13,0.4);
+          	gltf.scene.rotation.set(0.0,-1.5,0.0);
+			gltf.scene.scale.set(1.0,1.0,1.0);
 			computerScreen.mesh = gltf.scene;
-			computerScreen.id = gltf.scene.children[0].children[1].children[0].id;
+			computerScreen.id = gltf.scene.id;
           	computerScreen.name = "PC";
 			scene.add( computerScreen.mesh );
+        }, undefined, function ( error ) {
+          	console.error( error );
+        } );
+
+		// Load computer keyboard
+        loader.load( 'assets/models/keyboard.glb', function ( gltf ) {
+			gltf.scene.position.set(0.025,0.85,0.7);
+          	gltf.scene.rotation.set(0.0,-1.5,0.0);
+			gltf.scene.scale.set(1.0,1.0,1.0);
+			keyboard.mesh = gltf.scene;
+			keyboard.id = gltf.scene.id;
+          	keyboard.name = "PC";
+			scene.add( keyboard.mesh );
         }, undefined, function ( error ) {
           	console.error( error );
         } );
@@ -134,6 +162,26 @@
 			gltf.scene.position.set(-0.6,0.85,0.4);
           	gltf.scene.rotation.set(0.0,-1.0,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
+          	scene.add( gltf.scene );
+        }, undefined, function ( error ) {
+          	console.error( error );
+        } );
+
+		// Load floppy 1
+        loader.load( 'assets/models/floppy.glb', function ( gltf ) {
+			gltf.scene.position.set(0.6,0.85,0.4);
+          	gltf.scene.rotation.set(-1.55,0.0,0.0);
+			gltf.scene.scale.set(0.1,0.1,0.1);
+          	scene.add( gltf.scene );
+        }, undefined, function ( error ) {
+          	console.error( error );
+        } );
+
+		// Load floppy 2
+        loader.load( 'assets/models/floppy.glb', function ( gltf ) {
+			gltf.scene.position.set(0.62,0.85,0.46);
+          	gltf.scene.rotation.set(-1.50,0.0,0.2);
+			gltf.scene.scale.set(0.1,0.1,0.1);
           	scene.add( gltf.scene );
         }, undefined, function ( error ) {
           	console.error( error );
@@ -433,18 +481,14 @@
 					break;
 				case computerScreen.mesh.id:
 					document.getElementById("messageBox").innerHTML = computerScreen.name;
-					computerScreen.mesh.getWorldPosition( focus );
+					//computerScreen.mesh.getWorldPosition( focus );
 					break;
 				case poster.id:
 					document.getElementById("messageBox").innerHTML = poster.name;
 					poster.mesh.getWorldPosition( focus );
 					break;
-				case computerScreen.id:
-					document.getElementById("messageBox").innerHTML = computerScreen.name;
-					computerScreen.mesh.getWorldPosition( focus );
-					break;
 				default:
-					document.getElementById("messageBox").innerHTML = "";// intersects[0].object.id;
+					document.getElementById("messageBox").innerHTML = intersects[0].object.id;
 					
 					break;
 			}
