@@ -11,15 +11,24 @@
 
 	import '/src/style.css';
 
-	let stats;
-	let effect;
-	let camera, scene, raycaster, renderer,screenRenderer,controls,mixer,mix,clipAction;
+	let mixer,mix,clipAction;
 
 	const clock = new THREE.Clock();
     const modelLoader = new GLTFLoader();
 	const pointer = new THREE.Vector2();
 	const focus = new THREE.Vector3();
 	const labelRenderer = new CSS2DRenderer();
+	const camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
+	const scene = new THREE.Scene();
+	const screen = new Screen( 'SJOz3qjfQXU', 0.025, 1.28, 0.53, 0 );
+	const sceneRenderer = new THREE.WebGLRenderer( { antialias: true, alpha: true  } );
+	const screenRenderer = new CSS3DRenderer({alpha: true });
+	const raycaster = new THREE.Raycaster();
+	const effect = new OutlineEffect( sceneRenderer );
+	const controls = new OrbitControls( camera, sceneRenderer.domElement );
+
+	const stats = new Stats();
+	const axesHelper = new THREE.AxesHelper( 10 );
 
 	let label,labelDiv;
 	let intersects;
@@ -43,7 +52,6 @@
 	let books = new SceneObject("Libros");
 
 	let text;
-	let screen;
 
 	let cameraMoving = false;
 	let focusIn, zoomIn, focusOut, zoomOut, focused, zoomed;
@@ -53,23 +61,19 @@
 
 	// -------------- FUNCTIONS -------------------------
 	
-	// Initialization
-	function Init() {
-
-		// Clear current console output
-		console.clear();
-
-		camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 100 );
-        scene = new THREE.Scene();
-	
+	function InitLights(){
 		// Set light
 		const light = new THREE.DirectionalLight( 0xffffff, 3 );
 		light.position.set( 1, 1, 1 ).normalize();
 		scene.add( light );
-	
-		const axesHelper = new THREE.AxesHelper( 10 );
-		scene.add( axesHelper );
+	}
 
+	function InitHelpers(){
+		scene.add( axesHelper );
+		document.body.appendChild( stats.dom );
+	}
+
+	function InitLabel(){
 		labelRenderer.setSize(innerWidth, innerHeight);
   		labelRenderer.domElement.style.position = 'absolute';
   		labelRenderer.domElement.style.top = '0px';
@@ -79,10 +83,13 @@
   		labelDiv = document.createElement('div');
   		labelDiv.className = 'label';
   		labelDiv.style.marginTop = '-1em';
-		labelDiv.textContent = "hola mundo";
+		labelDiv.textContent = "";
   		label = new CSS2DObject(labelDiv);
 		label.visible = false;
   		scene.add(label);
+	}
+
+	function InitModels(){
 		
 		// Load self
         modelLoader.load( 'assets/models/self.glb', function ( gltf ) {
@@ -118,7 +125,7 @@
 
 		// Load computer monitor
         modelLoader.load( 'assets/models/monitor.glb', function ( gltf ) {
-			gltf.scene.position.set(0.025,1.13,0.4);
+			gltf.scene.position.set(0.025,1.34,0.55);
           	gltf.scene.rotation.set(0.0,-1.5,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
 			computerScreen.mesh = gltf.scene;
@@ -203,56 +210,49 @@
         }, undefined, function ( error ) {
           	console.error( error );
         } );*/
+	}
 
-       	Load_PES94();
+	function InitBoxes(){
+		Load_PES94();
 		Load_HORMONA();
 		Load_OUTCASH();
 		Load_RIO();
 		Load_GANDARA();
 		Load_SK();
 		Load_BIRICIA();
+	}
 
-        raycaster = new THREE.Raycaster();
-
-		renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true  } );
-		renderer.setPixelRatio( window.devicePixelRatio );
-		renderer.setSize( window.innerWidth, window.innerHeight );
-		renderer.setAnimationLoop( Animate );
-		document.body.appendChild( renderer.domElement );
-
-		screenRenderer = new CSS3DRenderer({alpha: true });
-		screenRenderer.setSize( window.innerWidth, window.innerHeight );
-		document.body.appendChild( screenRenderer.domElement );
-
-		screen = new Screen( 'SJOz3qjfQXU', 0.025, 1.28, 0.53, 0 );
+	function InitScreen(){
 		screen.scale.x = 0.00075;
 		screen.scale.y = 0.00075;
 		screen.scale.z = 0.00075;
 		scene.add( screen );
-	
-		stats = new Stats();
-		document.body.appendChild( stats.dom );
- 
-        const container = document.createElement( 'div' );
-        container.style= "text-align:center; background-color:red; cursor: pointer; opacity: 0.9; z-index: 10000;";
-        const p = document.createElement( 'p' );
-        p.id = "messageBox";
-        container.appendChild(p)
-        document.body.appendChild( container );
-        var panel = document.getElementById("messageBox");
-        panel.innerHTML = "test";
-        panel.style.display = "block";
+	}
 
-        controls = new OrbitControls( camera, renderer.domElement );
-        controls.minDistance = 0.8;
-        controls.maxDistance = 28;
+	function InitSceneRenderer(){
+		sceneRenderer.setPixelRatio( window.devicePixelRatio );
+		sceneRenderer.setSize( window.innerWidth, window.innerHeight );
+		sceneRenderer.setAnimationLoop( Animate );
+		document.body.appendChild( sceneRenderer.domElement );
+	}
+
+	function InitScreenRenderer(){
+		screenRenderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( screenRenderer.domElement );
+	}
+
+	function InitControls(){
+		controls.minDistance = 0;
+        controls.maxDistance = 10;
 		controls.minAzimuthAngle = -0.8;
 		controls.maxAzimuthAngle = 1;
 		controls.minPolarAngle = 1;
 		controls.maxPolarAngle = 1.5;
 		controls.enablePan = true;
 		controls.update();
+	}
 
+	function InitCamera(){
 		camPosX = -1;
 		camPosY = 1.8;
 		camPosZ = 3.5;
@@ -262,12 +262,149 @@
 		camRotZ = 4;
 
 		camera.position.set(camPosX,camPosY,camPosZ);
+		camera.rotation.set(camRotX,camRotY,camRotZ);
 		scene.getWorldPosition( focus );
-		camera.lookAt( scene.position );
-		camera.updateMatrixWorld();
-		
-		effect = new OutlineEffect( renderer );
+		//computerScreen.mesh.getWorldPosition( focus );
+		camera.lookAt( focus );
 
+		//SetFocusOnScreen();
+
+	}
+
+	async function InitialScene(){
+
+		scene.visible = false;
+
+		// Load bios 2 image
+		const containerBios2 = document.createElement( 'div' );
+        containerBios2.style = "position: absolute; top: 20px; right: 10px";
+		var bios2Image = new Image();
+		bios2Image.src = '/assets/backgrounds/bios2.PNG';
+		bios2Image.width = "200";
+		bios2Image.height = "150";
+		containerBios2.appendChild(bios2Image);
+		document.body.appendChild( containerBios2 );
+
+		await sleep(1000);
+
+		// Load bios 1 image
+		const containerBios1 = document.createElement( 'div' );
+        containerBios1.style = "position: absolute; top: 20px; left: 10px";
+		var bios1Image = new Image();
+		bios1Image.src = '/assets/backgrounds/bios1.PNG';
+		bios1Image.width = "30";
+		bios1Image.height = "50";
+		containerBios1.appendChild(bios1Image);
+		document.body.appendChild( containerBios1 );
+
+		// Write text line 1
+		const containerText1 = document.createElement( 'div' );
+		containerText1.style = "position: absolute; top: 0px; left: 50px; color:gray";
+		const p1 = document.createElement( 'p' );
+		p1.innerHTML = "Atmosphere";
+        containerText1.appendChild(p1);
+		document.body.appendChild( containerText1 );
+
+		// Write text line 2
+		const containerText2 = document.createElement( 'div' );
+		containerText2.style = "position: absolute; top: 20px; left: 50px; color:gray";
+		const p2 = document.createElement( 'p' );
+		p2.innerHTML = "Copyright(C) 1996, MS-Dos Club";
+        containerText2.appendChild(p2);
+		document.body.appendChild( containerText2 );
+
+		await sleep(1000);
+
+		// Write text line 3
+		const containerText3 = document.createElement( 'div' );
+		containerText3.style = "position: absolute; top: 100px; left: 50px; color:gray";
+		const p3 = document.createElement( 'p' );
+		p3.innerHTML = "Total memory: ";
+        containerText3.appendChild(p3);
+		document.body.appendChild( containerText3 );
+
+		// Write text line 4
+		const containerText4 = document.createElement( 'div' );
+		containerText4.style = "position: absolute; top: 100px; left: 160px; color:gray";
+		const p4 = document.createElement( 'p' );
+		p4.innerHTML = "0 MB";
+        containerText4.appendChild(p4);
+		document.body.appendChild( containerText4 );
+
+		var mem = 0;
+		while(mem < 160){
+			mem += 32;
+			p4.innerHTML = mem + " KB";
+			await sleep(10);
+		}
+		
+		await sleep(1000);
+
+		// Write text line 5
+		const containerText5 = document.createElement( 'div' );
+		containerText5.style = "position: absolute; top: 200px; left: 50px; color:gray";
+		const p5 = document.createElement( 'p' );
+		p5.innerHTML = "Loading resources...";
+        containerText5.appendChild(p5);
+		document.body.appendChild( containerText5 );
+
+		await sleep(1000);
+
+		// Write text line 6
+		const containerText6 = document.createElement( 'div' );
+		containerText6.style = "position: absolute; top: 220px; left: 50px; color:gray";
+		const p6 = document.createElement( 'p' );
+		p6.innerHTML = "Loading assets...";
+        containerText6.appendChild(p6);
+		document.body.appendChild( containerText6 );
+
+		await sleep(1000);
+
+		document.body.removeChild( containerBios1 );
+		document.body.removeChild( containerBios2 );
+		document.body.removeChild( containerText1 );
+		document.body.removeChild( containerText2 );
+		document.body.removeChild( containerText3 );
+		document.body.removeChild( containerText4 );
+		document.body.removeChild( containerText5 );
+		document.body.removeChild( containerText6 );
+
+		await sleep(1000);
+
+		scene.visible = true;
+		document.body.style.backgroundColor = "white";
+	}
+
+	// Initialization
+	function Init() {
+
+		// Clear current console output
+		console.clear();
+		
+		// Initial scene
+		InitialScene();
+		// Init lights
+		InitLights();
+		// Init helpers
+		InitHelpers();
+		// Init label	
+		InitLabel();
+		// Init models
+		InitModels();
+		// Init boxes
+       	InitBoxes();
+		// Init screen
+		InitScreen();
+		// Init scene renderer
+		InitSceneRenderer();
+		// Init screen renderer
+		InitScreenRenderer();
+		// Init controls
+		InitControls();
+		// Init camera
+		InitCamera();
+		
+		
 		// Declare events
 		document.addEventListener( 'mousemove', onPointerMove );
 		document.addEventListener('click', onPointerClick );
@@ -432,7 +569,7 @@
 	function onWindowResize() {
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
-		renderer.setSize( window.innerWidth, window.innerHeight );
+		sceneRenderer.setSize( window.innerWidth, window.innerHeight );
 	}
 
 	// Mouse pointer position update event
@@ -608,9 +745,9 @@
 	}
 
 	function SetFocusOnScreen(){
-		camPosX = 0;
-		camPosY = 1.2;
-		camPosZ = 1;
+		camPosX = 0.1;
+		camPosY = 1.1;
+		camPosZ = 0.4;
 
 		computerScreen.focus = true;
 		focusIn = true;
@@ -663,10 +800,9 @@
 	function Render() {
 		Animations();
 		ObjectDetection();
-		ActionUpdate();
 	    labelRenderer.render( scene, camera);
 		screenRenderer.render( scene, camera);
-		renderer.render( scene, camera );
+		sceneRenderer.render( scene, camera );
 		effect.render( scene, camera );
 	}
 
@@ -796,32 +932,15 @@
 						break;
 					default:
 						// Hide label
-						if(!focused){scene.getWorldPosition( focus );}
 						label.visible = false;
+						//if(!focused){scene.getWorldPosition( focus );}
 						break;
 				}
 			} else {
 				// Hide label
-				scene.getWorldPosition( focus );
-				label.visible = false;
-				document.getElementById("messageBox").innerHTML = "";
-        		//document.getElementById("messageBox").innerHTML = "nothing";
+				//scene.getWorldPosition( focus );
 			}
 		}
-	}
-
-	function ActionUpdate(){
-		if(hormona.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on hormona";}
-		if(pes94.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on pes94";}
-		if(outcash.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on out of cash";}
-		if(rio.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on rio";}
-		if(gandara.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on gandara";}
-		if(sk.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on school kombat";}
-		if(biricia.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on biricia";}
-		if(computerScreen.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on screen";}
-		if(poster.isFocused() & !cameraMoving){document.getElementById("messageBox").innerHTML = "focus on poster";}
-		
-		if(cameraMoving){document.getElementById("messageBox").innerHTML = "camera moving";}
 	}
 
 	function Animations(){
@@ -995,7 +1114,7 @@
 		iframe.style.width = '480px';
 		iframe.style.height = '360px';
 		iframe.style.border = '0px';
-		iframe.src = [ 'https://www.youtube.com/embed/', id, '?rel=0' ].join( '' );
+		iframe.src = 'https://msdos.club';
 		div.appendChild( iframe );
 
 		const object = new CSS3DObject( div );
@@ -1003,4 +1122,8 @@
 		object.rotation.y = ry;
 
 		return object;
+	}
+
+	function sleep(ms) {
+  		return new Promise(resolve => setTimeout(resolve, ms));		
 	}
