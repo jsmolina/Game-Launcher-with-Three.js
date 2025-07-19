@@ -1,6 +1,12 @@
 /**
- * @type {import('vite').UserCofnig}
+ * @type {import('vite').UserConfig}
  */
 export default{
-    base: process.env.NODE_ENV === 'production' ? '/Game-Launcher-with-Three.js/' : ''
+    assetsInclude:['**/*glb'],
+    base: process.env.NODE_ENV === 'production' ? '' : '',
+    build: {
+        chunkSizeWarningLimit: 60000,
+        assetsInlineLimit: 0
+    }
+
 }

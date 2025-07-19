@@ -8,8 +8,69 @@
 	import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 	import { Game } from './game.js';
 	import { SceneObject } from './sceneObject.js';
+	import imgBios1Url from '/assets/images/bios1.PNG';
+	import imgBios2Url from '/assets/images/bios2.PNG';
+	import modelSelfUrl from '/assets/models/self.glb';
+	import modelTableUrl from '/assets/models/table.glb';
+	import modelComputerUrl from '/assets/models/computer.glb';
+	import modelMonitorUrl from '/assets/models/monitor.glb';
+	import modelKeyboardUrl from '/assets/models/keyboard.glb';
+	import modelChairUrl from '/assets/models/chair.glb';
+	import modelPosterUrl from '/assets/models/poster.glb';
+	import modelBooksUrl from '/assets/models/books.glb';
+	import modelFloppyUrl from '/assets/models/floppy.glb';
+	import modelShoesUrl from '/assets/models/shoes.glb';
+	// textures
+	import textureBiriciaBack from '/assets/biricia/biricia_back.png';
+	import textureBiriciaFront from '/assets/biricia/biricia_front.png';
+	import textureBiriciaLeft from '/assets/biricia/biricia_left.png';
+	import textureBiriciaRight from '/assets/biricia/biricia_right.png';
+	import textureBiriciaTop from '/assets/biricia/biricia_top.png';
+	import textureBiriciaBottom from '/assets/biricia/biricia_bottom.png';
 
-	import '/src/style.css';
+	import textureGandaraBack from '/assets/gandara/gandara_back.png';
+	import textureGandaraFront from '/assets/gandara/gandara_front.png';
+	import textureGandaraLeft from '/assets/gandara/gandara_left.png';
+	import textureGandaraRight from '/assets/gandara/gandara_right.png';
+	import textureGandaraTop from '/assets/gandara/gandara_top.png';
+	import textureGandaraBottom from '/assets/gandara/gandara_bottom.png';
+
+	import textureHormonaBack from '/assets/hormona/hormona_back.png';
+	import textureHormonaFront from '/assets/hormona/hormona_front.png';
+	import textureHormonaLeft from '/assets/hormona/hormona_left.png';
+	import textureHormonaRight from '/assets/hormona/hormona_right.png';
+	import textureHormonaTop from '/assets/hormona/hormona_top.png';
+	import textureHormonaBottom from '/assets/hormona/hormona_bottom.png';
+
+	import textureOutcashBack from '/assets/outcash/outofcash_back.png';
+	import textureOutcashFront from '/assets/outcash/outofcash_front.png';
+	import textureOutcashLeft from '/assets/outcash/outofcash_left.png';
+	import textureOutcashRight from '/assets/outcash/outofcash_right.png';
+	import textureOutcashTop from '/assets/outcash/outofcash_top.png';
+	import textureOutcashBottom from '/assets/outcash/outofcash_bottom.png';
+	
+	import texturePes94Back from '/assets/pes94/pes94_back.png';
+	import texturePes94Front from '/assets/pes94/pes94_front.png';
+	import texturePes94Left from '/assets/pes94/pes94_left.png';
+	import texturePes94Right from '/assets/pes94/pes94_right.png';
+	import texturePes94Top from '/assets/pes94/pes94_top.png';
+	import texturePes94Bottom from '/assets/pes94/pes94_bottom.png';
+	
+	import textureRioBack from '/assets/rio/rio_back.png';
+	import textureRioFront from '/assets/rio/rio_front.png';
+	import textureRioLeft from '/assets/rio/rio_left.png';
+	import textureRioRight from '/assets/rio/rio_right.png';
+	import textureRioTop from '/assets/rio/rio_top.png';
+	import textureRioBottom from '/assets/rio/rio_bottom.png';
+
+	import textureSKBack from '/assets/sk/sk_back.png';
+	import textureSKFront from '/assets/sk/sk_front.png';
+	import textureSKLeft from '/assets/sk/sk_left.png';
+	import textureSKRight from '/assets/sk/sk_right.png';
+	import textureSKTop from '/assets/sk/sk_top.png';
+	import textureSKBottom from '/assets/sk/sk_bottom.png';
+
+	import '/style.css';
 
 	let mixer,mix,clipAction;
 
@@ -92,7 +153,7 @@
 	function InitModels(){
 		
 		// Load self
-        modelLoader.load( 'assets/models/self.glb', function ( gltf ) {
+        modelLoader.load( modelSelfUrl, function ( gltf ) {
 			gltf.scene.position.set(-1.0,1.5,0.0);
           	gltf.scene.rotation.set(0.0,1.55,0.0);
           	scene.add( gltf.scene );
@@ -101,7 +162,7 @@
         } );
 
 		// Load table
-        modelLoader.load( 'assets/models/table.glb', function ( gltf ) {
+        modelLoader.load( modelTableUrl, function ( gltf ) {
 			gltf.scene.position.set(0.0,-0.02,0.0);
           	gltf.scene.rotation.set(0.0,0.0,0.0);
 			gltf.scene.scale.set(0.8,0.8,0.8);
@@ -111,7 +172,7 @@
         } );
 
 		// Load computer cpu
-        modelLoader.load( 'assets/models/computer.glb', function ( gltf ) {
+        modelLoader.load( modelComputerUrl, function ( gltf ) {
 			gltf.scene.position.set(0.0,0.83,0.3);
           	gltf.scene.rotation.set(0.0,-1.5,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
@@ -124,7 +185,7 @@
         } );
 
 		// Load computer monitor
-        modelLoader.load( 'assets/models/monitor.glb', function ( gltf ) {
+        modelLoader.load( modelMonitorUrl, function ( gltf ) {
 			gltf.scene.position.set(0.025,1.34,0.55);
           	gltf.scene.rotation.set(0.0,-1.5,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
@@ -137,7 +198,7 @@
         } );
 
 		// Load computer keyboard
-        modelLoader.load( 'assets/models/keyboard.glb', function ( gltf ) {
+        modelLoader.load( modelKeyboardUrl, function ( gltf ) {
 			gltf.scene.position.set(0.025,0.85,0.7);
           	gltf.scene.rotation.set(0.0,-1.5,0.0);
 			gltf.scene.scale.set(1.3,1.3,1.3);
@@ -150,7 +211,7 @@
         } );
 
 		// Load chair
-        modelLoader.load( 'assets/models/chair.glb', function ( gltf ) {
+        modelLoader.load( modelChairUrl, function ( gltf ) {
 			gltf.scene.position.set(0.5,-0.1,1.5);
           	gltf.scene.rotation.set(0.0,-0.9,0.0);
 			gltf.scene.scale.set(0.8,0.8,0.8);
@@ -160,7 +221,7 @@
         } );
 
 		// Load poster
-        modelLoader.load( 'assets/models/poster.glb', function ( gltf ) {
+        modelLoader.load( modelPosterUrl, function ( gltf ) {
 			gltf.scene.position.set(1.7,1.2,0.0);
           	gltf.scene.rotation.set(0.0,-1.55,0.0);
 			gltf.scene.scale.set(0.6,0.6,0.6);
@@ -172,7 +233,7 @@
         } );
 
 		// Load books
-        modelLoader.load( 'assets/models/books.glb', function ( gltf ) {
+        modelLoader.load( modelBooksUrl, function ( gltf ) {
 			gltf.scene.position.set(-0.6,0.85,0.4);
           	gltf.scene.rotation.set(0.0,-1.0,0.0);
 			gltf.scene.scale.set(1.0,1.0,1.0);
@@ -182,7 +243,7 @@
         } );
 
 		// Load floppy 1
-        modelLoader.load( 'assets/models/floppy.glb', function ( gltf ) {
+        modelLoader.load( modelFloppyUrl, function ( gltf ) {
 			gltf.scene.position.set(0.6,0.85,0.4);
           	gltf.scene.rotation.set(-1.55,0.0,0.0);
 			gltf.scene.scale.set(0.1,0.1,0.1);
@@ -192,7 +253,7 @@
         } );
 
 		// Load floppy 2
-        modelLoader.load( 'assets/models/floppy.glb', function ( gltf ) {
+        modelLoader.load( modelFloppyUrl, function ( gltf ) {
 			gltf.scene.position.set(0.62,0.85,0.46);
           	gltf.scene.rotation.set(-1.50,0.0,0.2);
 			gltf.scene.scale.set(0.1,0.1,0.1);
@@ -202,7 +263,7 @@
         } );
 
 		// Load SHOES
-        /*modelLoader.load( 'assets/models/shoes.glb', function ( gltf ) {
+        /*modelLoader.load( modelShoesUrl, function ( gltf ) {
 			gltf.scene.position.set(-0.5,0.0,1.0);
           	gltf.scene.rotation.set(0.0,90.0,0.0);
 			gltf.scene.scale.set(0.3,0.3,0.3);
@@ -279,7 +340,7 @@
 		const containerBios2 = document.createElement( 'div' );
         containerBios2.style = "position: absolute; top: 20px; right: 10px";
 		var bios2Image = new Image();
-		bios2Image.src = '/assets/backgrounds/bios2.PNG';
+		bios2Image.src = imgBios2Url;
 		bios2Image.width = "200";
 		bios2Image.height = "150";
 		containerBios2.appendChild(bios2Image);
@@ -291,7 +352,7 @@
 		const containerBios1 = document.createElement( 'div' );
         containerBios1.style = "position: absolute; top: 20px; left: 10px";
 		var bios1Image = new Image();
-		bios1Image.src = '/assets/backgrounds/bios1.PNG';
+		bios1Image.src = imgBios1Url;
 		bios1Image.width = "30";
 		bios1Image.height = "50";
 		containerBios1.appendChild(bios1Image);
@@ -419,12 +480,12 @@
        	var geometry = new THREE.BoxGeometry(1,1.5,0.2);
        	// Textures
        	var material = [
-       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/outcash/outofcash_left.png") }),
-      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/outcash/outofcash_right.png") }),
-    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/outcash/outofcash_top.png") }),
-      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/outcash/outofcash_bottom.png") }),
-      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/outcash/outofcash_front.png") }),
-       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/outcash/outofcash_back.png") })
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureOutcashLeft) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureOutcashRight) }),
+    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureOutcashTop) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureOutcashBottom) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureOutcashFront) }),
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureOutcashBack) })
     	];
 
 		outcash.mesh = new THREE.Mesh( geometry, material );
@@ -440,12 +501,12 @@
         var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Textures
         var material = [
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_left.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_right.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_top.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_bottom.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_front.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/pes94/pes94_back.png") })
+         	new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texturePes94Left) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texturePes94Right) }),
+    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texturePes94Top) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texturePes94Bottom) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texturePes94Front) }),
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texturePes94Back) })
         ];
 
 		pes94.mesh = new THREE.Mesh( geometry, material );
@@ -461,12 +522,12 @@
         var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Textures
         var material = [
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_left.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_right.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_top.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_bottom.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_front.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/hormona/hormona_back.png") })
+          	new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureHormonaLeft) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureHormonaRight) }),
+    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureHormonaTop) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureHormonaBottom) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureHormonaFront) }),
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureHormonaBack) })
         ];
 
         hormona.mesh = new THREE.Mesh( geometry, material );
@@ -482,12 +543,12 @@
         var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Textures
         var material = [
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/rio/rio_left.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/rio/rio_right.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/rio/rio_top.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/rio/rio_bottom.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/rio/rio_front.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/rio/rio_back.png") })
+          	new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureRioLeft) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureRioRight) }),
+    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureRioTop) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureRioBottom) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureRioFront) }),
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureRioBack) })
         ];
 
         rio.mesh = new THREE.Mesh( geometry, material );
@@ -503,12 +564,12 @@
         var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Textures
         var material = [
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/gandara/gandara_left.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/gandara/gandara_right.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/gandara/gandara_top.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/gandara/gandara_bottom.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/gandara/gandara_front.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/gandara/gandara_back.png") })
+          	new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureGandaraLeft) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureGandaraRight) }),
+    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureGandaraTop) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureGandaraBottom) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureGandaraFront) }),
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureGandaraBack) })
         ];
 
         gandara.mesh = new THREE.Mesh( geometry, material );
@@ -524,12 +585,12 @@
         var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Textures
         var material = [
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/sk/sk_left.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/sk/sk_right.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/sk/sk_top.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/sk/sk_bottom.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/sk/sk_front.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/sk/sk_back.png") })
+          	new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureSKLeft) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureSKRight) }),
+    		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureSKTop) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureSKBottom) }),
+      		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureSKFront) }),
+       		new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureSKBack) })
         ];
 
         sk.mesh = new THREE.Mesh( geometry, material );
@@ -545,12 +606,12 @@
         var geometry = new THREE.BoxGeometry(1,1.5,0.2);
         // Textures
         var material = [
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/biricia/biricia_left.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/biricia/biricia_right.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/biricia/biricia_top.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/biricia/biricia_bottom.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/biricia/biricia_front.png") }),
-          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("assets/biricia/biricia_back.png") })
+          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureBiriciaLeft) }),
+          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureBiriciaRight) }),
+          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureBiriciaTop) }),
+          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureBiriciaBottom) }),
+          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureBiriciaFront) }),
+          new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(textureBiriciaBack) })
         ];
 
         biricia.mesh = new THREE.Mesh( geometry, material );
