@@ -10,13 +10,14 @@ export class Game {
   scale;
   cameraOnFocus;
   mesh;
-  constructor(name) {
+  constructor({ name, texturesPath, position, cameraOnFocus }) {
     this.name = name;
     this.focus = false;
     this.position = new THREE.Vector3();
     this.rotation = new THREE.Vector3();
     this.scale = new THREE.Vector3();
     this.cameraOnFocus = new THREE.Vector3();
+    this.texturesPath = texturesPath;
   }
 
   setPosition(x, y, z) {
