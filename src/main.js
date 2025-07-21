@@ -4,34 +4,42 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
 import Stats from 'three/addons/libs/stats.module.js';
 import {
-	CSS2DRenderer,
-	CSS2DObject,
+  CSS2DRenderer,
+  CSS2DObject,
 } from 'three/addons/renderers/CSS2DRenderer.js';
 import {
-	CSS3DRenderer,
-	CSS3DObject,
+  CSS3DRenderer,
+  CSS3DObject,
 } from 'three/addons/renderers/CSS3DRenderer.js';
 import { Game } from './game.js';
 import { SceneObject } from './sceneObject.js';
-import imgBios1Url from '/assets/images/bios1.PNG';
-import imgBios2Url from '/assets/images/bios2.PNG';
-import modelSelfUrl from '/assets/models/self.glb';
-import modelTableUrl from '/assets/models/table.glb';
-import modelComputerUrl from '/assets/models/computer.glb';
-import modelMonitorUrl from '/assets/models/monitor.glb';
-import modelKeyboardUrl from '/assets/models/keyboard.glb';
-import modelChairUrl from '/assets/models/chair.glb';
-import modelPosterUrl from '/assets/models/poster.glb';
-import modelBooksUrl from '/assets/models/books.glb';
-import modelFloppyUrl from '/assets/models/floppy.glb';
-import modelShoesUrl from '/assets/models/shoes.glb';
+import imgBios1Url from '../assets/images/bios1.PNG';
+import imgBios2Url from '../assets/images/bios2.PNG';
+import modelSelfUrl from '../assets/models/self.glb';
+import modelTableUrl from '../assets/models/table.glb';
+import modelComputerUrl from '../assets/models/computer.glb';
+import modelMonitorUrl from '../assets/models/monitor.glb';
+import modelKeyboardUrl from '../assets/models/keyboard.glb';
+import modelChairUrl from '../assets/models/chair.glb';
+import modelPosterUrl from '../assets/models/poster.glb';
+import modelBooksUrl from '../assets/models/books.glb';
+import modelFloppyUrl from '../assets/models/floppy.glb';
+import modelShoesUrl from '../assets/models/shoes.glb';
+// textures
 
-// vite meta.glob needs to use the actual path not the alias
-const textures = import.meta.glob('../assets/**/*.png', { eager: true, as: 'url' });
-console.log("TEXTURES", textures)
+import {
+  createMaterialFromTextures,
+  getTexturesPathFromPrefix,
+  loadingManager,
+} from './loadingManager.js';
+const textures = import.meta.glob('../assets/**/*.png', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+console.log(textures);
 
 import '/style.css';
-import { loadingManager } from './loadingManager.js';
 
 let mixer, mix, clipAction;
 
@@ -41,10 +49,10 @@ const pointer = new THREE.Vector2();
 const focus = new THREE.Vector3();
 const labelRenderer = new CSS2DRenderer();
 const camera = new THREE.PerspectiveCamera(
-	70,
-	window.innerWidth / window.innerHeight,
-	0.1,
-	100,
+  70,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100,
 );
 const scene = new THREE.Scene();
 const screen = new Screen('SJOz3qjfQXU', 0.025, 1.28, 0.53, 0);
@@ -62,13 +70,30 @@ let intersects;
 
 let camPosX, camPosY, camPosZ, camRotX, camRotY, camRotZ;
 
-let pes94 = new Game("Pesadilla del '94");
-let hormona = new Game('La fiesta de las hormonas');
-let outcash = new Game('Out of cash');
-let rio = new Game('Rio Inmaculado');
-let gandara = new Game('La Gandara');
-let sk = new Game('School Kombat');
-let biricia = new Game('La Biricia');
+const games = {
+  outcash: new Game({
+    name: 'Out of cash',
+    texturesPath: '../assets/outcash/outofcash',
+  }),
+  pes94: new Game({
+    name: "Pesadilla del '94",
+    texturesPath: '../assets/pes94/pes94',
+  }),
+  hormona: new Game({
+    name: 'La fiesta de las hormonas',
+    texturesPath: '../assets/hormona/hormona',
+  }),
+  rio: new Game({ name: 'Rio Inmaculado', texturesPath: '../assets/rio/rio' }),
+  gandara: new Game({
+    name: 'La Gandara',
+    texturesPath: '../assets/gandara/gandara',
+  }),
+  sk: new Game({ name: 'School Kombat', texturesPath: '../assets/sk/sk' }),
+  biricia: new Game({
+    name: 'La Biricia',
+    texturesPath: '../assets/biricia/biricia',
+  }),
+};
 
 let computerCPU = new SceneObject('CPU');
 let computerScreen = new SceneObject('Screen');
@@ -89,196 +114,196 @@ Animate();
 // -------------- FUNCTIONS -------------------------
 
 function InitLights() {
-	// Set light
-	const light = new THREE.DirectionalLight(0xffffff, 3);
-	light.position.set(1, 1, 1).normalize();
-	scene.add(light);
+  // Set light
+  const light = new THREE.DirectionalLight(0xffffff, 3);
+  light.position.set(1, 1, 1).normalize();
+  scene.add(light);
 }
 
 function InitHelpers() {
-	scene.add(axesHelper);
-	document.body.appendChild(stats.dom);
+  scene.add(axesHelper);
+  document.body.appendChild(stats.dom);
 }
 
 function InitLabel() {
-	labelRenderer.setSize(innerWidth, innerHeight);
-	labelRenderer.domElement.style.position = 'absolute';
-	labelRenderer.domElement.style.top = '0px';
-	labelRenderer.domElement.style.pointerEvents = 'none';
-	document.body.appendChild(labelRenderer.domElement);
+  labelRenderer.setSize(innerWidth, innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0px';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  document.body.appendChild(labelRenderer.domElement);
 
-	labelDiv = document.createElement('div');
-	labelDiv.className = 'label';
-	labelDiv.style.marginTop = '-1em';
-	labelDiv.textContent = '';
-	label = new CSS2DObject(labelDiv);
-	label.visible = false;
-	scene.add(label);
+  labelDiv = document.createElement('div');
+  labelDiv.className = 'label';
+  labelDiv.style.marginTop = '-1em';
+  labelDiv.textContent = '';
+  label = new CSS2DObject(labelDiv);
+  label.visible = false;
+  scene.add(label);
 }
 
 function InitModels() {
-	// Load self
-	modelLoader.load(
-		modelSelfUrl,
-		function (gltf) {
-			gltf.scene.position.set(-1.0, 1.5, 0.0);
-			gltf.scene.rotation.set(0.0, 1.55, 0.0);
-			scene.add(gltf.scene);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load self
+  modelLoader.load(
+    modelSelfUrl,
+    function (gltf) {
+      gltf.scene.position.set(-1.0, 1.5, 0.0);
+      gltf.scene.rotation.set(0.0, 1.55, 0.0);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load table
-	modelLoader.load(
-		modelTableUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.0, -0.02, 0.0);
-			gltf.scene.rotation.set(0.0, 0.0, 0.0);
-			gltf.scene.scale.set(0.8, 0.8, 0.8);
-			scene.add(gltf.scene);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load table
+  modelLoader.load(
+    modelTableUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.0, -0.02, 0.0);
+      gltf.scene.rotation.set(0.0, 0.0, 0.0);
+      gltf.scene.scale.set(0.8, 0.8, 0.8);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load computer cpu
-	modelLoader.load(
-		modelComputerUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.0, 0.83, 0.3);
-			gltf.scene.rotation.set(0.0, -1.5, 0.0);
-			gltf.scene.scale.set(1.0, 1.0, 1.0);
-			computerCPU.mesh = gltf.scene;
-			computerCPU.id = gltf.scene.children[0].id;
-			computerCPU.name = 'CPU 486 DX2 66MHz';
-			scene.add(computerCPU.mesh);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load computer cpu
+  modelLoader.load(
+    modelComputerUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.0, 0.83, 0.3);
+      gltf.scene.rotation.set(0.0, -1.5, 0.0);
+      gltf.scene.scale.set(1.0, 1.0, 1.0);
+      computerCPU.mesh = gltf.scene;
+      computerCPU.id = gltf.scene.children[0].id;
+      computerCPU.name = 'CPU 486 DX2 66MHz';
+      scene.add(computerCPU.mesh);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load computer monitor
-	modelLoader.load(
-		modelMonitorUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.025, 1.34, 0.55);
-			gltf.scene.rotation.set(0.0, -1.5, 0.0);
-			gltf.scene.scale.set(1.0, 1.0, 1.0);
-			computerScreen.mesh = gltf.scene;
-			computerScreen.id = gltf.scene.children[0].children[0].id;
-			computerScreen.name = 'Monitor';
-			scene.add(computerScreen.mesh);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load computer monitor
+  modelLoader.load(
+    modelMonitorUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.025, 1.34, 0.55);
+      gltf.scene.rotation.set(0.0, -1.5, 0.0);
+      gltf.scene.scale.set(1.0, 1.0, 1.0);
+      computerScreen.mesh = gltf.scene;
+      computerScreen.id = gltf.scene.children[0].children[0].id;
+      computerScreen.name = 'Monitor';
+      scene.add(computerScreen.mesh);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load computer keyboard
-	modelLoader.load(
-		modelKeyboardUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.025, 0.85, 0.7);
-			gltf.scene.rotation.set(0.0, -1.5, 0.0);
-			gltf.scene.scale.set(1.3, 1.3, 1.3);
-			keyboard.mesh = gltf.scene;
-			keyboard.id = gltf.scene.id;
-			keyboard.name = 'PC';
-			scene.add(keyboard.mesh);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load computer keyboard
+  modelLoader.load(
+    modelKeyboardUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.025, 0.85, 0.7);
+      gltf.scene.rotation.set(0.0, -1.5, 0.0);
+      gltf.scene.scale.set(1.3, 1.3, 1.3);
+      keyboard.mesh = gltf.scene;
+      keyboard.id = gltf.scene.id;
+      keyboard.name = 'PC';
+      scene.add(keyboard.mesh);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load chair
-	modelLoader.load(
-		modelChairUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.5, -0.1, 1.5);
-			gltf.scene.rotation.set(0.0, -0.9, 0.0);
-			gltf.scene.scale.set(0.8, 0.8, 0.8);
-			scene.add(gltf.scene);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load chair
+  modelLoader.load(
+    modelChairUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.5, -0.1, 1.5);
+      gltf.scene.rotation.set(0.0, -0.9, 0.0);
+      gltf.scene.scale.set(0.8, 0.8, 0.8);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load poster
-	modelLoader.load(
-		modelPosterUrl,
-		function (gltf) {
-			gltf.scene.position.set(1.7, 1.2, 0.0);
-			gltf.scene.rotation.set(0.0, -1.55, 0.0);
-			gltf.scene.scale.set(0.6, 0.6, 0.6);
-			poster.mesh = gltf.scene;
-			poster.id = gltf.scene.children[0].children[0].id;
-			scene.add(poster.mesh);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load poster
+  modelLoader.load(
+    modelPosterUrl,
+    function (gltf) {
+      gltf.scene.position.set(1.7, 1.2, 0.0);
+      gltf.scene.rotation.set(0.0, -1.55, 0.0);
+      gltf.scene.scale.set(0.6, 0.6, 0.6);
+      poster.mesh = gltf.scene;
+      poster.id = gltf.scene.children[0].children[0].id;
+      scene.add(poster.mesh);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load books
-	modelLoader.load(
-		modelBooksUrl,
-		function (gltf) {
-			gltf.scene.position.set(-0.6, 0.85, 0.4);
-			gltf.scene.rotation.set(0.0, -1.0, 0.0);
-			gltf.scene.scale.set(1.0, 1.0, 1.0);
-			scene.add(gltf.scene);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load books
+  modelLoader.load(
+    modelBooksUrl,
+    function (gltf) {
+      gltf.scene.position.set(-0.6, 0.85, 0.4);
+      gltf.scene.rotation.set(0.0, -1.0, 0.0);
+      gltf.scene.scale.set(1.0, 1.0, 1.0);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load floppy 1
-	modelLoader.load(
-		modelFloppyUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.6, 0.85, 0.4);
-			gltf.scene.rotation.set(-1.55, 0.0, 0.0);
-			gltf.scene.scale.set(0.1, 0.1, 0.1);
-			scene.add(gltf.scene);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load floppy 1
+  modelLoader.load(
+    modelFloppyUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.6, 0.85, 0.4);
+      gltf.scene.rotation.set(-1.55, 0.0, 0.0);
+      gltf.scene.scale.set(0.1, 0.1, 0.1);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load floppy 2
-	modelLoader.load(
-		modelFloppyUrl,
-		function (gltf) {
-			gltf.scene.position.set(0.62, 0.85, 0.46);
-			gltf.scene.rotation.set(-1.5, 0.0, 0.2);
-			gltf.scene.scale.set(0.1, 0.1, 0.1);
-			scene.add(gltf.scene);
-		},
-		undefined,
-		function (error) {
-			console.error(error);
-		},
-	);
+  // Load floppy 2
+  modelLoader.load(
+    modelFloppyUrl,
+    function (gltf) {
+      gltf.scene.position.set(0.62, 0.85, 0.46);
+      gltf.scene.rotation.set(-1.5, 0.0, 0.2);
+      gltf.scene.scale.set(0.1, 0.1, 0.1);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    },
+  );
 
-	// Load SHOES
-	/*modelLoader.load( modelShoesUrl, function ( gltf ) {
+  // Load SHOES
+  /*modelLoader.load( modelShoesUrl, function ( gltf ) {
 		  gltf.scene.position.set(-0.5,0.0,1.0);
 			  gltf.scene.rotation.set(0.0,90.0,0.0);
 		  gltf.scene.scale.set(0.3,0.3,0.3);
@@ -289,505 +314,335 @@ function InitModels() {
 }
 
 function InitBoxes() {
-	Load_PES94();
-	Load_HORMONA();
-	Load_OUTCASH();
-	Load_RIO();
-	Load_GANDARA();
-	Load_SK();
-	Load_BIRICIA();
+  // TODO: Load games within a loop since they share most of the code
+  Load_PES94();
+  Load_HORMONA();
+  Load_OUTCASH();
+  Load_RIO();
+  Load_GANDARA();
+  Load_SK();
+  Load_BIRICIA();
 }
 
 function InitScreen() {
-	screen.scale.x = 0.00075;
-	screen.scale.y = 0.00075;
-	screen.scale.z = 0.00075;
-	scene.add(screen);
+  screen.scale.x = 0.00075;
+  screen.scale.y = 0.00075;
+  screen.scale.z = 0.00075;
+  scene.add(screen);
 }
 
 function InitSceneRenderer() {
-	sceneRenderer.setPixelRatio(window.devicePixelRatio);
-	sceneRenderer.setSize(window.innerWidth, window.innerHeight);
-	sceneRenderer.setAnimationLoop(Animate);
-	document.body.appendChild(sceneRenderer.domElement);
+  sceneRenderer.setPixelRatio(window.devicePixelRatio);
+  sceneRenderer.setSize(window.innerWidth, window.innerHeight);
+  sceneRenderer.setAnimationLoop(Animate);
+  document.body.appendChild(sceneRenderer.domElement);
 }
 
 function InitScreenRenderer() {
-	screenRenderer.setSize(window.innerWidth, window.innerHeight);
-	document.body.appendChild(screenRenderer.domElement);
+  screenRenderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(screenRenderer.domElement);
 }
 
 function InitControls() {
-	controls.minDistance = 0;
-	controls.maxDistance = 10;
-	controls.minAzimuthAngle = -0.8;
-	controls.maxAzimuthAngle = 1;
-	controls.minPolarAngle = 1;
-	controls.maxPolarAngle = 1.5;
-	controls.enablePan = true;
-	controls.update();
+  controls.minDistance = 0;
+  controls.maxDistance = 10;
+  controls.minAzimuthAngle = -0.8;
+  controls.maxAzimuthAngle = 1;
+  controls.minPolarAngle = 1;
+  controls.maxPolarAngle = 1.5;
+  controls.enablePan = true;
+  controls.update();
 }
 
 function InitCamera() {
-	camPosX = -1;
-	camPosY = 1.8;
-	camPosZ = 3.5;
+  camPosX = -1;
+  camPosY = 1.8;
+  camPosZ = 3.5;
 
-	camRotX = -1;
-	camRotY = 1;
-	camRotZ = 4;
+  camRotX = -1;
+  camRotY = 1;
+  camRotZ = 4;
 
-	camera.position.set(camPosX, camPosY, camPosZ);
-	camera.rotation.set(camRotX, camRotY, camRotZ);
-	scene.getWorldPosition(focus);
-	//computerScreen.mesh.getWorldPosition( focus );
-	camera.lookAt(focus);
+  camera.position.set(camPosX, camPosY, camPosZ);
+  camera.rotation.set(camRotX, camRotY, camRotZ);
+  scene.getWorldPosition(focus);
+  //computerScreen.mesh.getWorldPosition( focus );
+  camera.lookAt(focus);
 
-	//SetFocusOnScreen();
+  //SetFocusOnScreen();
 }
 
 async function InitialScene() {
-	scene.visible = false;
+  scene.visible = false;
 
-	// Load bios 2 image
-	const containerBios2 = document.createElement('div');
-	containerBios2.style = 'position: absolute; top: 20px; right: 10px';
-	var bios2Image = new Image();
-	bios2Image.src = imgBios2Url;
-	bios2Image.width = '200';
-	bios2Image.height = '150';
-	containerBios2.appendChild(bios2Image);
-	document.body.appendChild(containerBios2);
+  // Load bios 2 image
+  const containerBios2 = document.createElement('div');
+  containerBios2.style = 'position: absolute; top: 20px; right: 10px';
+  var bios2Image = new Image();
+  bios2Image.src = imgBios2Url;
+  bios2Image.width = '200';
+  bios2Image.height = '150';
+  containerBios2.appendChild(bios2Image);
+  document.body.appendChild(containerBios2);
 
-	await sleep(1000);
+  await sleep(1000);
 
-	// Load bios 1 image
-	const containerBios1 = document.createElement('div');
-	containerBios1.style = 'position: absolute; top: 20px; left: 10px';
-	var bios1Image = new Image();
-	bios1Image.src = imgBios1Url;
-	bios1Image.width = '30';
-	bios1Image.height = '50';
-	containerBios1.appendChild(bios1Image);
-	document.body.appendChild(containerBios1);
+  // Load bios 1 image
+  const containerBios1 = document.createElement('div');
+  containerBios1.style = 'position: absolute; top: 20px; left: 10px';
+  var bios1Image = new Image();
+  bios1Image.src = imgBios1Url;
+  bios1Image.width = '30';
+  bios1Image.height = '50';
+  containerBios1.appendChild(bios1Image);
+  document.body.appendChild(containerBios1);
 
-	// Write text line 1
-	const containerText1 = document.createElement('div');
-	containerText1.style = 'position: absolute; top: 0px; left: 50px; color:gray';
-	const p1 = document.createElement('p');
-	p1.innerHTML = 'Atmosphere';
-	containerText1.appendChild(p1);
-	document.body.appendChild(containerText1);
+  // Write text line 1
+  const containerText1 = document.createElement('div');
+  containerText1.style = 'position: absolute; top: 0px; left: 50px; color:gray';
+  const p1 = document.createElement('p');
+  p1.innerHTML = 'Atmosphere';
+  containerText1.appendChild(p1);
+  document.body.appendChild(containerText1);
 
-	// Write text line 2
-	const containerText2 = document.createElement('div');
-	containerText2.style =
-		'position: absolute; top: 20px; left: 50px; color:gray';
-	const p2 = document.createElement('p');
-	p2.innerHTML = 'Copyright(C) 1996, MS-Dos Club';
-	containerText2.appendChild(p2);
-	document.body.appendChild(containerText2);
+  // Write text line 2
+  const containerText2 = document.createElement('div');
+  containerText2.style =
+    'position: absolute; top: 20px; left: 50px; color:gray';
+  const p2 = document.createElement('p');
+  p2.innerHTML = 'Copyright(C) 1996, MS-Dos Club';
+  containerText2.appendChild(p2);
+  document.body.appendChild(containerText2);
 
-	await sleep(1000);
+  await sleep(1000);
 
-	// Write text line 3
-	const containerText3 = document.createElement('div');
-	containerText3.style =
-		'position: absolute; top: 100px; left: 50px; color:gray';
-	const p3 = document.createElement('p');
-	p3.innerHTML = 'Total memory: ';
-	containerText3.appendChild(p3);
-	document.body.appendChild(containerText3);
+  // Write text line 3
+  const containerText3 = document.createElement('div');
+  containerText3.style =
+    'position: absolute; top: 100px; left: 50px; color:gray';
+  const p3 = document.createElement('p');
+  p3.innerHTML = 'Total memory: ';
+  containerText3.appendChild(p3);
+  document.body.appendChild(containerText3);
 
-	// Write text line 4
-	const containerText4 = document.createElement('div');
-	containerText4.style =
-		'position: absolute; top: 100px; left: 160px; color:gray';
-	const p4 = document.createElement('p');
-	p4.innerHTML = '0 MB';
-	containerText4.appendChild(p4);
-	document.body.appendChild(containerText4);
+  // Write text line 4
+  const containerText4 = document.createElement('div');
+  containerText4.style =
+    'position: absolute; top: 100px; left: 160px; color:gray';
+  const p4 = document.createElement('p');
+  p4.innerHTML = '0 MB';
+  containerText4.appendChild(p4);
+  document.body.appendChild(containerText4);
 
-	var mem = 0;
-	while (mem < 160) {
-		mem += 32;
-		p4.innerHTML = mem + ' KB';
-		await sleep(10);
-	}
+  var mem = 0;
+  while (mem < 160) {
+    mem += 32;
+    p4.innerHTML = mem + ' KB';
+    await sleep(10);
+  }
 
-	await sleep(1000);
+  await sleep(1000);
 
-	// Write text line 5
-	const containerText5 = document.createElement('div');
-	containerText5.style =
-		'position: absolute; top: 200px; left: 50px; color:gray';
-	const p5 = document.createElement('p');
-	p5.innerHTML = 'Loading resources...';
-	containerText5.appendChild(p5);
-	document.body.appendChild(containerText5);
+  // Write text line 5
+  const containerText5 = document.createElement('div');
+  containerText5.style =
+    'position: absolute; top: 200px; left: 50px; color:gray';
+  const p5 = document.createElement('p');
+  p5.innerHTML = 'Loading resources...';
+  containerText5.appendChild(p5);
+  document.body.appendChild(containerText5);
 
-	await sleep(1000);
+  await sleep(1000);
 
-	// Write text line 6
-	const containerText6 = document.createElement('div');
-	containerText6.style =
-		'position: absolute; top: 220px; left: 50px; color:gray';
-	const p6 = document.createElement('p');
-	p6.innerHTML = 'Loading assets...';
-	containerText6.appendChild(p6);
-	document.body.appendChild(containerText6);
+  // Write text line 6
+  const containerText6 = document.createElement('div');
+  containerText6.style =
+    'position: absolute; top: 220px; left: 50px; color:gray';
+  const p6 = document.createElement('p');
+  p6.innerHTML = 'Loading assets...';
+  containerText6.appendChild(p6);
+  document.body.appendChild(containerText6);
 
-	await sleep(1000);
+  await sleep(1000);
 
-	document.body.removeChild(containerBios1);
-	document.body.removeChild(containerBios2);
-	document.body.removeChild(containerText1);
-	document.body.removeChild(containerText2);
-	document.body.removeChild(containerText3);
-	document.body.removeChild(containerText4);
-	document.body.removeChild(containerText5);
-	document.body.removeChild(containerText6);
+  document.body.removeChild(containerBios1);
+  document.body.removeChild(containerBios2);
+  document.body.removeChild(containerText1);
+  document.body.removeChild(containerText2);
+  document.body.removeChild(containerText3);
+  document.body.removeChild(containerText4);
+  document.body.removeChild(containerText5);
+  document.body.removeChild(containerText6);
 
-	await sleep(1000);
+  await sleep(1000);
 
-	scene.visible = true;
-	document.body.style.backgroundColor = 'white';
+  scene.visible = true;
+  document.body.style.backgroundColor = 'white';
 }
 
 // Initialization
 function Init() {
-	// Clear current console output
-	// console.clear();
+  // Clear current console output
+  // console.clear();
 
-	// Initial scene
-	InitialScene();
-	// Init lights
-	InitLights();
-	// Init helpers
-	InitHelpers();
-	// Init label
-	InitLabel();
-	// Init models
-	InitModels();
-	// Init boxes
-	InitBoxes();
-	// Init screen
-	InitScreen();
-	// Init scene renderer
-	InitSceneRenderer();
-	// Init screen renderer
-	InitScreenRenderer();
-	// Init controls
-	InitControls();
-	// Init camera
-	InitCamera();
+  // Initial scene
+  InitialScene();
+  // Init lights
+  InitLights();
+  // Init helpers
+  InitHelpers();
+  // Init label
+  InitLabel();
+  // Init models
+  InitModels();
+  // Init boxes
+  InitBoxes();
+  // Init screen
+  InitScreen();
+  // Init scene renderer
+  InitSceneRenderer();
+  // Init screen renderer
+  InitScreenRenderer();
+  // Init controls
+  InitControls();
+  // Init camera
+  InitCamera();
 
-	// Declare events
-	document.addEventListener('mousemove', onPointerMove);
-	document.addEventListener('click', onPointerClick);
-	window.addEventListener('resize', onWindowResize);
+  // Declare events
+  document.addEventListener('mousemove', onPointerMove);
+  document.addEventListener('click', onPointerClick);
+  window.addEventListener('resize', onWindowResize);
 }
 
 //#region Load Boxes
 
 // Load Out of cash box
 function Load_OUTCASH() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader(loadingManager).load(
-				textures['/assets/outcash/outofcash_left.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader(loadingManager).load(
-				textures['/assets/outcash/outofcash_right.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader(loadingManager).load(
-				textures['/assets/outcash/outofcash_top.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader(loadingManager).load(
-				textures['/assets/outcash/outofcash_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader(loadingManager).load(
-				textures['/assets/outcash/outofcash_front.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader(loadingManager).load(
-				textures['/assets/outcash/outofcash_back.png'],
-			),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  //
+  const texturePaths = getTexturesPathFromPrefix(
+    textures,
+    '../assets/outcash/outofcash',
+  );
+  const material = createMaterialFromTextures(texturePaths);
 
-	outcash.mesh = new THREE.Mesh(geometry, material);
-	outcash.setScale(0.2, 0.2, 0.2);
-	outcash.setPosition(-1.4, 1.7, 0.14);
-	outcash.setRotation(0.0, -0.8, 0.0);
-	outcash.setCameraOnFocus(-2, 2, 1);
-	scene.add(outcash.mesh);
+  games.outcash.mesh = new THREE.Mesh(geometry, material);
+  games.outcash.setScale(0.2, 0.2, 0.2);
+  games.outcash.setPosition(-1.4, 1.7, 0.14);
+  games.outcash.setRotation(0.0, -0.8, 0.0);
+  games.outcash.setCameraOnFocus(-2, 2, 1);
+  scene.add(games.outcash.mesh);
 }
+
 // Load pes94 box
 function Load_PES94() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/pes94/pes94_left.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/pes94/pes94_right.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/pes94/pes94_top.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/pes94/pes94_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/pes94/pes94_front.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/pes94/pes94_back.png'],
-			),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  const texturePaths = getTexturesPathFromPrefix(
+    textures,
+    games.pes94.texturesPath,
+  );
+  const material = createMaterialFromTextures(texturePaths);
 
-	pes94.mesh = new THREE.Mesh(geometry, material);
-	pes94.setScale(0.2, 0.2, 0.2);
-	pes94.setPosition(-1.25, 1.7, 0.14);
-	pes94.setRotation(0.0, -0.8, 0.0);
-	pes94.setCameraOnFocus(-1.6, 2, 1);
-	scene.add(pes94.mesh);
+  games.pes94.mesh = new THREE.Mesh(geometry, material);
+  games.pes94.setScale(0.2, 0.2, 0.2);
+  games.pes94.setPosition(-1.25, 1.7, 0.14);
+  games.pes94.setRotation(0.0, -0.8, 0.0);
+  games.pes94.setCameraOnFocus(-1.6, 2, 1);
+  scene.add(games.pes94.mesh);
 }
 // Load Hormona box
 function Load_HORMONA() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/hormona/hormona_left.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/hormona/hormona_right.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/hormona/hormona_top.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/hormona/hormona_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/hormona/hormona_front.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/hormona/hormona_back.png'],
-			),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  const texturePaths = getTexturesPathFromPrefix(
+    textures,
+    games.hormona.texturesPath,
+  );
+  const material = createMaterialFromTextures(texturePaths);
 
-	hormona.mesh = new THREE.Mesh(geometry, material);
-	hormona.setScale(0.2, 0.2, 0.2);
-	hormona.setPosition(-1.1, 1.7, 0.12);
-	hormona.setRotation(0.0, -0.8, 0.0);
-	hormona.setCameraOnFocus(-1.2, 2, 1);
-	scene.add(hormona.mesh);
+  games.hormona.mesh = new THREE.Mesh(geometry, material);
+  games.hormona.setScale(0.2, 0.2, 0.2);
+  games.hormona.setPosition(-1.1, 1.7, 0.12);
+  games.hormona.setRotation(0.0, -0.8, 0.0);
+  games.hormona.setCameraOnFocus(-1.2, 2, 1);
+  scene.add(games.hormona.mesh);
 }
 // Load Rio box
 function Load_RIO() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/rio/rio_left.png']),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/rio/rio_right.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/rio/rio_top.png']),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/rio/rio_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/rio/rio_front.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/rio/rio_back.png']),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  const texturePaths = getTexturesPathFromPrefix(
+    textures,
+    games.rio.texturesPath,
+  );
+  const material = createMaterialFromTextures(texturePaths);
 
-	rio.mesh = new THREE.Mesh(geometry, material);
-	rio.setScale(0.2, 0.2, 0.2);
-	rio.setPosition(-0.95, 1.7, 0.12);
-	rio.setRotation(0.0, -0.8, 0.0);
-	rio.setCameraOnFocus(-1.0, 0, 1);
-	scene.add(rio.mesh);
+  games.rio.mesh = new THREE.Mesh(geometry, material);
+  games.rio.setScale(0.2, 0.2, 0.2);
+  games.rio.setPosition(-0.95, 1.7, 0.12);
+  games.rio.setRotation(0.0, -0.8, 0.0);
+  games.rio.setCameraOnFocus(-1.0, 0, 1);
+  scene.add(games.rio.mesh);
 }
 // Load Rio box
 function Load_GANDARA() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/gandara/gandara_left.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/gandara/gandara_right.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/gandara/gandara_top.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/gandara/gandara_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/gandara/gandara_front.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/gandara/gandara_back.png'],
-			),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  const texturePaths = getTexturesPathFromPrefix(
+    textures,
+    games.gandara.texturesPath,
+  );
+  const material = createMaterialFromTextures(texturePaths);
 
-	gandara.mesh = new THREE.Mesh(geometry, material);
-	gandara.setScale(0.2, 0.2, 0.2);
-	gandara.setPosition(-0.8, 1.7, 0.12);
-	gandara.setRotation(0.0, -0.8, 0.0);
-	gandara.setCameraOnFocus(-0.8, 2, 1);
-	scene.add(gandara.mesh);
+  games.gandara.mesh = new THREE.Mesh(geometry, material);
+  games.gandara.setScale(0.2, 0.2, 0.2);
+  games.gandara.setPosition(-0.8, 1.7, 0.12);
+  games.gandara.setRotation(0.0, -0.8, 0.0);
+  games.gandara.setCameraOnFocus(-0.8, 2, 1);
+  scene.add(games.gandara.mesh);
 }
 // Load Rio box
 function Load_SK() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/sk/sk_left.png']),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/sk/sk_right.png']),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/sk/sk_top.png']),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/sk/sk_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/sk/sk_front.png']),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(textures['/assets/sk/sk_back.png']),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  const texturePaths = getTexturesPathFromPrefix(
+    textures,
+    games.sk.texturesPath,
+  );
+  const material = createMaterialFromTextures(texturePaths);
 
-	sk.mesh = new THREE.Mesh(geometry, material);
-	sk.setScale(0.2, 0.2, 0.2);
-	sk.setPosition(-0.65, 1.7, 0.12);
-	sk.setRotation(0.0, -0.8, 0.0);
-	sk.setCameraOnFocus(-0.6, 0, 1);
-	scene.add(sk.mesh);
+  games.sk.mesh = new THREE.Mesh(geometry, material);
+  games.sk.setScale(0.2, 0.2, 0.2);
+  games.sk.setPosition(-0.65, 1.7, 0.12);
+  games.sk.setRotation(0.0, -0.8, 0.0);
+  games.sk.setCameraOnFocus(-0.6, 0, 1);
+  scene.add(games.sk.mesh);
 }
 // Load Rio box
 function Load_BIRICIA() {
-	// Generate game box
-	var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
-	// Textures
-	var material = [
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/biricia/biricia_left.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/biricia/biricia_right.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/biricia/biricia_top.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/biricia/biricia_bottom.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/biricia/biricia_front.png'],
-			),
-		}),
-		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load(
-				textures['/assets/biricia/biricia_back.png'],
-			),
-		}),
-	];
+  // Generate game box
+  var geometry = new THREE.BoxGeometry(1, 1.5, 0.2);
+  // Textures
+  const texturesPaths = getTexturesPathFromPrefix(
+    textures,
+    games.biricia.texturesPath,
+  );
+  const material = createMaterialFromTextures(texturesPaths);
 
-	biricia.mesh = new THREE.Mesh(geometry, material);
-	biricia.setScale(0.2, 0.2, 0.2);
-	biricia.setPosition(-0.5, 1.7, 0.12);
-	biricia.setRotation(0.0, -0.8, 0.0);
-	biricia.setCameraOnFocus(-0.4, 0, 1);
-	scene.add(biricia.mesh);
+  games.biricia.mesh = new THREE.Mesh(geometry, material);
+  games.biricia.setScale(0.2, 0.2, 0.2);
+  games.biricia.setPosition(-0.5, 1.7, 0.12);
+  games.biricia.setRotation(0.0, -0.8, 0.0);
+  games.biricia.setCameraOnFocus(-0.4, 0, 1);
+  scene.add(games.biricia.mesh);
 }
 
 //#endregion
@@ -796,135 +651,135 @@ function Load_BIRICIA() {
 
 // Window resize event
 function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	sceneRenderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  sceneRenderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 // Mouse pointer position update event
 function onPointerMove(event) {
-	pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-	pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 }
 
 // Mouse pointer position update event
 function onPointerClick(event) {
-	label.visible = false;
-	// find intersections
-	raycaster.setFromCamera(pointer, camera);
-	intersects = raycaster.intersectObjects(scene.children, true);
+  label.visible = false;
+  // find intersections
+  raycaster.setFromCamera(pointer, camera);
+  intersects = raycaster.intersectObjects(scene.children, true);
 
-	if (intersects.length > 0) {
-		switch (intersects[0].object.id) {
-			case outcash.mesh.id:
-				if (!focused) {
-					SetFocusOnOutCash();
-				}
-				if (focused & !outcash.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & outcash.isFocused()) {
-					ZoomInOutCashBox();
-				}
-				break;
-			case pes94.mesh.id:
-				if (!focused) {
-					SetFocusOnPes94();
-				}
-				if (focused & !pes94.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & pes94.isFocused()) {
-					ZoomInPes94Box();
-				}
-				break;
-			case hormona.mesh.id:
-				if (!focused) {
-					SetFocusOnHormona();
-				}
-				if (focused & !hormona.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & hormona.isFocused()) {
-					ZoomInHomonaBox();
-				}
-				break;
-			case rio.mesh.id:
-				if (!focused) {
-					SetFocusOnRio();
-				}
-				if (focused & !rio.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & rio.isFocused()) {
-					ZoomInRioBox();
-				}
-				break;
-			case gandara.mesh.id:
-				if (!focused) {
-					SetFocusOnGandara();
-				}
-				if (focused & !gandara.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & gandara.isFocused()) {
-				}
-				break;
-			case sk.mesh.id:
-				if (!focused) {
-					SetFocusOnSK();
-				}
-				if (focused & !sk.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & sk.isFocused()) {
-				}
-				break;
-			case biricia.mesh.id:
-				if (!focused) {
-					SetFocusOnBiricia();
-				}
-				if (focused & !biricia.isFocused()) {
-					ReleaseFocus();
-				}
-				if (focused & biricia.isFocused()) {
-				}
-				break;
-			case computerCPU.id:
-				break;
-			case computerScreen.id:
-				if (!focused) {
-					SetFocusOnScreen();
-				}
-				if (focused) {
-					ReleaseFocus();
-				}
-				break;
-			case poster.id:
-				if (!focused) {
-					SetFocusOnPoster();
-				}
-				if (focused) {
-					ReleaseFocus();
-				}
-				break;
-			default:
-				if (hormona.isFocused()) {
-					FocusOutHormonaBox();
-				}
-				if (focused) {
-					ReleaseFocus();
-				}
-				break;
-		}
-	} else {
-		if (hormona.isFocused()) {
-			FocusOutHormonaBox();
-		}
-		if (focused) {
-			ReleaseFocus();
-		}
-	}
+  if (intersects.length > 0) {
+    switch (intersects[0].object.id) {
+      case games.outcash.mesh.id:
+        if (!focused) {
+          SetFocusOnOutCash();
+        }
+        if (focused & !games.outcash.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.outcash.isFocused()) {
+          ZoomInOutCashBox();
+        }
+        break;
+      case games.pes94.mesh.id:
+        if (!focused) {
+          SetFocusOnPes94();
+        }
+        if (focused & !games.pes94.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.pes94.isFocused()) {
+          ZoomInPes94Box();
+        }
+        break;
+      case games.hormona.mesh.id:
+        if (!focused) {
+          SetFocusOnHormona();
+        }
+        if (focused & !games.hormona.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.hormona.isFocused()) {
+          ZoomInHomonaBox();
+        }
+        break;
+      case games.rio.mesh.id:
+        if (!focused) {
+          SetFocusOnRio();
+        }
+        if (focused & !games.rio.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.rio.isFocused()) {
+          ZoomInRioBox();
+        }
+        break;
+      case games.gandara.mesh.id:
+        if (!focused) {
+          SetFocusOnGandara();
+        }
+        if (focused & !games.gandara.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.gandara.isFocused()) {
+        }
+        break;
+      case games.sk.mesh.id:
+        if (!focused) {
+          SetFocusOnSK();
+        }
+        if (focused & !games.sk.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.sk.isFocused()) {
+        }
+        break;
+      case games.biricia.mesh.id:
+        if (!focused) {
+          SetFocusOnBiricia();
+        }
+        if (focused & !games.biricia.isFocused()) {
+          ReleaseFocus();
+        }
+        if (focused & games.biricia.isFocused()) {
+        }
+        break;
+      case computerCPU.id:
+        break;
+      case computerScreen.id:
+        if (!focused) {
+          SetFocusOnScreen();
+        }
+        if (focused) {
+          ReleaseFocus();
+        }
+        break;
+      case poster.id:
+        if (!focused) {
+          SetFocusOnPoster();
+        }
+        if (focused) {
+          ReleaseFocus();
+        }
+        break;
+      default:
+        if (games.hormona.isFocused()) {
+          FocusOutHormonaBox();
+        }
+        if (focused) {
+          ReleaseFocus();
+        }
+        break;
+    }
+  } else {
+    if (games.hormona.isFocused()) {
+      FocusOutHormonaBox();
+    }
+    if (focused) {
+      ReleaseFocus();
+    }
+  }
 }
 
 //#endregion
@@ -932,671 +787,671 @@ function onPointerClick(event) {
 //#region Camera functions
 
 function CameraCorrection() {
-	if (cameraMoving) {
-		if (camera.position.x > camPosX + 0.1) {
-			camera.position.x -= 0.02;
-		}
-		if (camera.position.x < camPosX - 0.1) {
-			camera.position.x += 0.02;
-		}
-		if (camera.position.y > camPosY + 0.1) {
-			camera.position.y -= 0.02;
-		}
-		if (camera.position.y < camPosY - 0.1) {
-			camera.position.y += 0.02;
-		}
-		if (camera.position.z > camPosZ + 0.1) {
-			camera.position.z -= 0.02;
-		}
-		if (camera.position.z < camPosZ - 0.1) {
-			camera.position.z += 0.02;
-		}
-	}
+  if (cameraMoving) {
+    if (camera.position.x > camPosX + 0.1) {
+      camera.position.x -= 0.02;
+    }
+    if (camera.position.x < camPosX - 0.1) {
+      camera.position.x += 0.02;
+    }
+    if (camera.position.y > camPosY + 0.1) {
+      camera.position.y -= 0.02;
+    }
+    if (camera.position.y < camPosY - 0.1) {
+      camera.position.y += 0.02;
+    }
+    if (camera.position.z > camPosZ + 0.1) {
+      camera.position.z -= 0.02;
+    }
+    if (camera.position.z < camPosZ - 0.1) {
+      camera.position.z += 0.02;
+    }
+  }
 
-	if (
-		(camPosX + 0.5 > camera.position.x) &
-		(camPosX - 0.5 < camera.position.x) &
-		(camPosY + 0.5 > camera.position.y) &
-		(camPosY - 0.5 < camera.position.y) &
-		(camPosZ + 0.5 > camera.position.z) &
-		(camPosZ - 0.5 < camera.position.z)
-	) {
-		if (focusIn) {
-			focused = true;
-			focusIn = false;
-		}
-		if (zoomIn) {
-			zoomed = true;
-			zoomIn = false;
-		}
-		if (focusOut) {
-			focused = false;
-			focusOut = false;
-		}
-		if (zoomOut) {
-			zoomed = false;
-			zoomOut = false;
-		}
+  if (
+    (camPosX + 0.5 > camera.position.x) &
+    (camPosX - 0.5 < camera.position.x) &
+    (camPosY + 0.5 > camera.position.y) &
+    (camPosY - 0.5 < camera.position.y) &
+    (camPosZ + 0.5 > camera.position.z) &
+    (camPosZ - 0.5 < camera.position.z)
+  ) {
+    if (focusIn) {
+      focused = true;
+      focusIn = false;
+    }
+    if (zoomIn) {
+      zoomed = true;
+      zoomIn = false;
+    }
+    if (focusOut) {
+      focused = false;
+      focusOut = false;
+    }
+    if (zoomOut) {
+      zoomed = false;
+      zoomOut = false;
+    }
 
-		cameraMoving = false;
-	}
+    cameraMoving = false;
+  }
 }
 
 function SetFocusOnHormona() {
-	camPosX = hormona.cameraOnFocus.x;
-	camPosZ = hormona.cameraOnFocus.z;
-	hormona.focus = true;
-	focusIn = true;
-	cameraMoving = true;
-	FocusInHomonaBox();
+  camPosX = games.hormona.cameraOnFocus.x;
+  camPosZ = games.hormona.cameraOnFocus.z;
+  games.hormona.focus = true;
+  focusIn = true;
+  cameraMoving = true;
+  FocusInHomonaBox();
 }
 
 function SetFocusOnPes94() {
-	camPosX = pes94.cameraOnFocus.x;
-	camPosZ = pes94.cameraOnFocus.z;
-	pes94.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  camPosX = games.pes94.cameraOnFocus.x;
+  camPosZ = games.pes94.cameraOnFocus.z;
+  games.pes94.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnOutCash() {
-	camPosX = outcash.cameraOnFocus.x;
-	camPosZ = outcash.cameraOnFocus.z;
-	outcash.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  camPosX = games.outcash.cameraOnFocus.x;
+  camPosZ = games.outcash.cameraOnFocus.z;
+  games.outcash.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnRio() {
-	camPosX = rio.cameraOnFocus.x;
-	camPosZ = rio.cameraOnFocus.z;
-	rio.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  camPosX = games.rio.cameraOnFocus.x;
+  camPosZ = games.rio.cameraOnFocus.z;
+  games.rio.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnGandara() {
-	camPosX = gandara.cameraOnFocus.x;
-	camPosZ = gandara.cameraOnFocus.z;
-	gandara.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  camPosX = games.gandara.cameraOnFocus.x;
+  camPosZ = games.gandara.cameraOnFocus.z;
+  games.gandara.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnSK() {
-	camPosX = sk.cameraOnFocus.x;
-	camPosZ = sk.cameraOnFocus.z;
-	sk.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  camPosX = games.sk.cameraOnFocus.x;
+  camPosZ = games.sk.cameraOnFocus.z;
+  games.sk.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnBiricia() {
-	camPosX = biricia.cameraOnFocus.x;
-	camPosZ = biricia.cameraOnFocus.z;
-	biricia.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  camPosX = games.biricia.cameraOnFocus.x;
+  camPosZ = games.biricia.cameraOnFocus.z;
+  games.biricia.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnScreen() {
-	camPosX = 0.1;
-	camPosY = 1.1;
-	camPosZ = 0.4;
+  camPosX = 0.1;
+  camPosY = 1.1;
+  camPosZ = 0.4;
 
-	computerScreen.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  computerScreen.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function SetFocusOnPoster() {
-	camPosX = 2;
-	camPosY = 2;
-	camPosZ = 2;
+  camPosX = 2;
+  camPosY = 2;
+  camPosZ = 2;
 
-	poster.focus = true;
-	focusIn = true;
-	cameraMoving = true;
+  poster.focus = true;
+  focusIn = true;
+  cameraMoving = true;
 }
 
 function ReleaseFocus() {
-	// Hide label
-	label.visible = false;
+  // Hide label
+  label.visible = false;
 
-	camPosX = -1;
-	camPosY = 1.8;
-	camPosZ = 3.5;
+  camPosX = -1;
+  camPosY = 1.8;
+  camPosZ = 3.5;
 
-	camRotX = -1;
-	camRotY = 1;
-	camRotZ = 4;
+  camRotX = -1;
+  camRotY = 1;
+  camRotZ = 4;
 
-	scene.getWorldPosition(focus);
+  scene.getWorldPosition(focus);
 
-	// Reset focus flags
-	outcash.focus = false;
-	pes94.focus = false;
-	hormona.focus = false;
-	rio.focus = false;
-	gandara.focus = false;
-	sk.focus = false;
-	biricia.focus = false;
-	computerScreen.focus = false;
-	poster.focus = false;
+  // Reset focus flags
+  games.outcash.focus = false;
+  games.pes94.focus = false;
+  games.hormona.focus = false;
+  games.rio.focus = false;
+  games.gandara.focus = false;
+  games.sk.focus = false;
+  games.biricia.focus = false;
+  computerScreen.focus = false;
+  poster.focus = false;
 
-	focusIn = false;
-	focusOut = true;
-	cameraMoving = true;
+  focusIn = false;
+  focusOut = true;
+  cameraMoving = true;
 }
 
 //#endregion
 
 // Render update
 function Render() {
-	Animations();
-	ObjectDetection();
-	labelRenderer.render(scene, camera);
-	screenRenderer.render(scene, camera);
-	sceneRenderer.render(scene, camera);
-	effect.render(scene, camera);
+  Animations();
+  ObjectDetection();
+  labelRenderer.render(scene, camera);
+  screenRenderer.render(scene, camera);
+  sceneRenderer.render(scene, camera);
+  effect.render(scene, camera);
 }
 
 // Animation update
 function Animate() {
-	Render();
-	stats.update();
-	controls.update();
+  Render();
+  stats.update();
+  controls.update();
 }
 
 function ObjectDetection() {
-	if (!cameraMoving) {
-		controls.target.lerp(focus, 0.001);
-	} else {
-		controls.target.lerp(focus, 0.03);
-	}
-	if (controls.enabled) {
-		CameraCorrection();
-	}
-	camera.updateMatrixWorld();
+  if (!cameraMoving) {
+    controls.target.lerp(focus, 0.001);
+  } else {
+    controls.target.lerp(focus, 0.03);
+  }
+  if (controls.enabled) {
+    CameraCorrection();
+  }
+  camera.updateMatrixWorld();
 
-	// find intersections
-	raycaster.setFromCamera(pointer, camera);
-	intersects = raycaster.intersectObjects(scene.children, true);
+  // find intersections
+  raycaster.setFromCamera(pointer, camera);
+  intersects = raycaster.intersectObjects(scene.children, true);
 
-	// Object detection when zoom is not active
-	if (!zoomed & !cameraMoving) {
-		if (intersects.length > 0) {
-			switch (intersects[0].object.id) {
-				case outcash.mesh.id:
-					// Show label
-					labelDiv.textContent = outcash.name;
-					label.position.set(
-						outcash.mesh.position.x,
-						outcash.mesh.position.y + 0.2,
-						outcash.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						outcash.mesh.getWorldPosition(focus);
-					}
-					break;
-				case pes94.mesh.id:
-					// Show label
-					labelDiv.textContent = pes94.name;
-					label.position.set(
-						pes94.mesh.position.x,
-						pes94.mesh.position.y + 0.2,
-						pes94.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						pes94.mesh.getWorldPosition(focus);
-					}
-					break;
-				case hormona.mesh.id:
-					labelDiv.textContent = hormona.name;
-					label.position.set(
-						hormona.mesh.position.x,
-						hormona.mesh.position.y + 0.2,
-						hormona.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						hormona.mesh.getWorldPosition(focus);
-					}
-					break;
-				case rio.mesh.id:
-					labelDiv.textContent = rio.name;
-					label.position.set(
-						rio.mesh.position.x,
-						rio.mesh.position.y + 0.2,
-						rio.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						rio.mesh.getWorldPosition(focus);
-					}
-					break;
-				case gandara.mesh.id:
-					labelDiv.textContent = gandara.name;
-					label.position.set(
-						gandara.mesh.position.x,
-						gandara.mesh.position.y + 0.2,
-						gandara.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						gandara.mesh.getWorldPosition(focus);
-					}
-					break;
-				case sk.mesh.id:
-					labelDiv.textContent = sk.name;
-					label.position.set(
-						sk.mesh.position.x,
-						sk.mesh.position.y + 0.2,
-						sk.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						sk.mesh.getWorldPosition(focus);
-					}
-					break;
-				case biricia.mesh.id:
-					labelDiv.textContent = biricia.name;
-					label.position.set(
-						biricia.mesh.position.x,
-						biricia.mesh.position.y + 0.2,
-						biricia.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						biricia.mesh.getWorldPosition(focus);
-					}
-					break;
-				case computerCPU.id:
-					labelDiv.textContent = computerCPU.name;
-					label.position.set(
-						computerCPU.mesh.position.x,
-						computerCPU.mesh.position.y + 0.2,
-						computerCPU.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					computerCPU.mesh.getWorldPosition(focus);
-					break;
-				case computerScreen.id:
-					labelDiv.textContent = computerScreen.name;
-					label.position.set(
-						computerScreen.mesh.position.x,
-						computerScreen.mesh.position.y + 0.4,
-						computerScreen.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						computerScreen.mesh.getWorldPosition(focus);
-					}
-					break;
-				case poster.id:
-					labelDiv.textContent = poster.name;
-					label.position.set(
-						poster.mesh.position.x,
-						poster.mesh.position.y + 0.6,
-						poster.mesh.position.z + 0.2,
-					);
-					label.visible = true;
-					if (!focused) {
-						poster.mesh.getWorldPosition(focus);
-					}
-					break;
-				default:
-					// Hide label
-					label.visible = false;
-					//if(!focused){scene.getWorldPosition( focus );}
-					break;
-			}
-		} else {
-			// Hide label
-			//scene.getWorldPosition( focus );
-		}
-	}
+  // Object detection when zoom is not active
+  if (!zoomed & !cameraMoving) {
+    if (intersects.length > 0) {
+      switch (intersects[0].object.id) {
+        case games.outcash.mesh.id:
+          // Show label
+          labelDiv.textContent = games.outcash.name;
+          label.position.set(
+            games.outcash.mesh.position.x,
+            games.outcash.mesh.position.y + 0.2,
+            games.outcash.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.outcash.mesh.getWorldPosition(focus);
+          }
+          break;
+        case games.pes94.mesh.id:
+          // Show label
+          labelDiv.textContent = games.pes94.name;
+          label.position.set(
+            games.pes94.mesh.position.x,
+            games.pes94.mesh.position.y + 0.2,
+            games.pes94.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.pes94.mesh.getWorldPosition(focus);
+          }
+          break;
+        case games.hormona.mesh.id:
+          labelDiv.textContent = games.hormona.name;
+          label.position.set(
+            games.hormona.mesh.position.x,
+            games.hormona.mesh.position.y + 0.2,
+            games.hormona.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.hormona.mesh.getWorldPosition(focus);
+          }
+          break;
+        case games.rio.mesh.id:
+          labelDiv.textContent = games.rio.name;
+          label.position.set(
+            games.rio.mesh.position.x,
+            games.rio.mesh.position.y + 0.2,
+            games.rio.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.rio.mesh.getWorldPosition(focus);
+          }
+          break;
+        case games.gandara.mesh.id:
+          labelDiv.textContent = games.gandara.name;
+          label.position.set(
+            games.gandara.mesh.position.x,
+            games.gandara.mesh.position.y + 0.2,
+            games.gandara.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.gandara.mesh.getWorldPosition(focus);
+          }
+          break;
+        case games.sk.mesh.id:
+          labelDiv.textContent = games.sk.name;
+          label.position.set(
+            games.sk.mesh.position.x,
+            games.sk.mesh.position.y + 0.2,
+            games.sk.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.sk.mesh.getWorldPosition(focus);
+          }
+          break;
+        case games.biricia.mesh.id:
+          labelDiv.textContent = games.biricia.name;
+          label.position.set(
+            games.biricia.mesh.position.x,
+            games.biricia.mesh.position.y + 0.2,
+            games.biricia.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            games.biricia.mesh.getWorldPosition(focus);
+          }
+          break;
+        case computerCPU.id:
+          labelDiv.textContent = computerCPU.name;
+          label.position.set(
+            computerCPU.mesh.position.x,
+            computerCPU.mesh.position.y + 0.2,
+            computerCPU.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          computerCPU.mesh.getWorldPosition(focus);
+          break;
+        case computerScreen.id:
+          labelDiv.textContent = computerScreen.name;
+          label.position.set(
+            computerScreen.mesh.position.x,
+            computerScreen.mesh.position.y + 0.4,
+            computerScreen.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            computerScreen.mesh.getWorldPosition(focus);
+          }
+          break;
+        case poster.id:
+          labelDiv.textContent = poster.name;
+          label.position.set(
+            poster.mesh.position.x,
+            poster.mesh.position.y + 0.6,
+            poster.mesh.position.z + 0.2,
+          );
+          label.visible = true;
+          if (!focused) {
+            poster.mesh.getWorldPosition(focus);
+          }
+          break;
+        default:
+          // Hide label
+          label.visible = false;
+          //if(!focused){scene.getWorldPosition( focus );}
+          break;
+      }
+    } else {
+      // Hide label
+      //scene.getWorldPosition( focus );
+    }
+  }
 }
 
 function Animations() {
-	const delta = clock.getDelta();
-	if (mixer) {
-		mixer.update(delta);
-	}
-	if (mix) {
-		mix.update(delta);
-	}
+  const delta = clock.getDelta();
+  if (mixer) {
+    mixer.update(delta);
+  }
+  if (mix) {
+    mix.update(delta);
+  }
 }
 
 function FocusInHomonaBox() {
-	// Hormona box movement
-	const pos = new THREE.VectorKeyframeTrack(
-		'.position',
-		[0, 1, 2],
-		[
-			hormona.mesh.position.x,
-			hormona.mesh.position.y,
-			hormona.mesh.position.z,
-			hormona.mesh.position.x + 0.2,
-			hormona.mesh.position.y,
-			hormona.mesh.position.z + 0.2,
-			hormona.mesh.position.x + 0.2,
-			hormona.mesh.position.y,
-			hormona.mesh.position.z + 1,
-		],
-	);
-	const scale = new THREE.VectorKeyframeTrack(
-		'.scale',
-		[0, 1, 2],
-		[
-			hormona.mesh.scale.x,
-			hormona.mesh.scale.y,
-			hormona.mesh.scale.z,
-			hormona.mesh.scale.x,
-			hormona.mesh.scale.y,
-			hormona.mesh.scale.z,
-			hormona.mesh.scale.x,
-			hormona.mesh.scale.y,
-			hormona.mesh.scale.z,
-		],
-	);
-	const axis = new THREE.Vector3(0, 1, 0);
-	const inital_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.8);
-	const middle_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.4);
-	const final_q = new THREE.Quaternion().setFromAxisAngle(axis, 0.0);
-	const quaternion = new THREE.QuaternionKeyframeTrack(
-		'.quaternion',
-		[0, 1, 2],
-		[
-			inital_q.x,
-			inital_q.y,
-			inital_q.z,
-			inital_q.w,
-			middle_q.x,
-			middle_q.y,
-			middle_q.z,
-			middle_q.w,
-			final_q.x,
-			final_q.y,
-			final_q.z,
-			final_q.w,
-		],
-	);
-	const clip = new THREE.AnimationClip('Action', 3, [scale, pos, quaternion]);
-	mix = new THREE.AnimationMixer(hormona.mesh);
+  // Hormona box movement
+  const pos = new THREE.VectorKeyframeTrack(
+    '.position',
+    [0, 1, 2],
+    [
+      games.hormona.mesh.position.x,
+      games.hormona.mesh.position.y,
+      games.hormona.mesh.position.z,
+      games.hormona.mesh.position.x + 0.2,
+      games.hormona.mesh.position.y,
+      games.hormona.mesh.position.z + 0.2,
+      games.hormona.mesh.position.x + 0.2,
+      games.hormona.mesh.position.y,
+      games.hormona.mesh.position.z + 1,
+    ],
+  );
+  const scale = new THREE.VectorKeyframeTrack(
+    '.scale',
+    [0, 1, 2],
+    [
+      games.hormona.mesh.scale.x,
+      games.hormona.mesh.scale.y,
+      games.hormona.mesh.scale.z,
+      games.hormona.mesh.scale.x,
+      games.hormona.mesh.scale.y,
+      games.hormona.mesh.scale.z,
+      games.hormona.mesh.scale.x,
+      games.hormona.mesh.scale.y,
+      games.hormona.mesh.scale.z,
+    ],
+  );
+  const axis = new THREE.Vector3(0, 1, 0);
+  const inital_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.8);
+  const middle_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.4);
+  const final_q = new THREE.Quaternion().setFromAxisAngle(axis, 0.0);
+  const quaternion = new THREE.QuaternionKeyframeTrack(
+    '.quaternion',
+    [0, 1, 2],
+    [
+      inital_q.x,
+      inital_q.y,
+      inital_q.z,
+      inital_q.w,
+      middle_q.x,
+      middle_q.y,
+      middle_q.z,
+      middle_q.w,
+      final_q.x,
+      final_q.y,
+      final_q.z,
+      final_q.w,
+    ],
+  );
+  const clip = new THREE.AnimationClip('Action', 3, [scale, pos, quaternion]);
+  mix = new THREE.AnimationMixer(games.hormona.mesh);
 
-	// create a ClipAction and set it to play
-	clipAction = mix.clipAction(clip);
-	clipAction.setLoop(THREE.LoopOnce);
-	clipAction.clampWhenFinished = true;
-	clipAction.play();
+  // create a ClipAction and set it to play
+  clipAction = mix.clipAction(clip);
+  clipAction.setLoop(THREE.LoopOnce);
+  clipAction.clampWhenFinished = true;
+  clipAction.play();
 }
 
 function FocusOutHormonaBox() {
-	// Hormona box movement
-	const pos = new THREE.VectorKeyframeTrack(
-		'.position',
-		[0, 1, 2],
-		[
-			hormona.mesh.position.x,
-			hormona.mesh.position.y,
-			hormona.mesh.position.z,
-			hormona.mesh.position.x,
-			hormona.mesh.position.y,
-			hormona.mesh.position.z - 0.8,
-			hormona.mesh.position.x - 0.2,
-			hormona.mesh.position.y,
-			hormona.mesh.position.z - 1.0,
-		],
-	);
-	const scale = new THREE.VectorKeyframeTrack(
-		'.scale',
-		[0, 1, 2],
-		[
-			hormona.mesh.scale.x,
-			hormona.mesh.scale.y,
-			hormona.mesh.scale.z,
-			hormona.mesh.scale.x,
-			hormona.mesh.scale.y,
-			hormona.mesh.scale.z,
-			hormona.mesh.scale.x,
-			hormona.mesh.scale.y,
-			hormona.mesh.scale.z,
-		],
-	);
-	const axis = new THREE.Vector3(0, 1, 0);
-	const inital_q = new THREE.Quaternion().setFromAxisAngle(axis, 0.0);
-	const middle_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.4);
-	const final_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.8);
-	const quaternion = new THREE.QuaternionKeyframeTrack(
-		'.quaternion',
-		[0, 1, 2],
-		[
-			inital_q.x,
-			inital_q.y,
-			inital_q.z,
-			inital_q.w,
-			middle_q.x,
-			middle_q.y,
-			middle_q.z,
-			middle_q.w,
-			final_q.x,
-			final_q.y,
-			final_q.z,
-			final_q.w,
-		],
-	);
-	const clip = new THREE.AnimationClip('Action', 3, [scale, pos, quaternion]);
-	mix = new THREE.AnimationMixer(hormona.mesh);
+  // Hormona box movement
+  const pos = new THREE.VectorKeyframeTrack(
+    '.position',
+    [0, 1, 2],
+    [
+      games.hormona.mesh.position.x,
+      games.hormona.mesh.position.y,
+      games.hormona.mesh.position.z,
+      games.hormona.mesh.position.x,
+      games.hormona.mesh.position.y,
+      games.hormona.mesh.position.z - 0.8,
+      games.hormona.mesh.position.x - 0.2,
+      games.hormona.mesh.position.y,
+      games.hormona.mesh.position.z - 1.0,
+    ],
+  );
+  const scale = new THREE.VectorKeyframeTrack(
+    '.scale',
+    [0, 1, 2],
+    [
+      games.hormona.mesh.scale.x,
+      games.hormona.mesh.scale.y,
+      games.hormona.mesh.scale.z,
+      games.hormona.mesh.scale.x,
+      games.hormona.mesh.scale.y,
+      games.hormona.mesh.scale.z,
+      games.hormona.mesh.scale.x,
+      games.hormona.mesh.scale.y,
+      games.hormona.mesh.scale.z,
+    ],
+  );
+  const axis = new THREE.Vector3(0, 1, 0);
+  const inital_q = new THREE.Quaternion().setFromAxisAngle(axis, 0.0);
+  const middle_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.4);
+  const final_q = new THREE.Quaternion().setFromAxisAngle(axis, -0.8);
+  const quaternion = new THREE.QuaternionKeyframeTrack(
+    '.quaternion',
+    [0, 1, 2],
+    [
+      inital_q.x,
+      inital_q.y,
+      inital_q.z,
+      inital_q.w,
+      middle_q.x,
+      middle_q.y,
+      middle_q.z,
+      middle_q.w,
+      final_q.x,
+      final_q.y,
+      final_q.z,
+      final_q.w,
+    ],
+  );
+  const clip = new THREE.AnimationClip('Action', 3, [scale, pos, quaternion]);
+  mix = new THREE.AnimationMixer(games.hormona.mesh);
 
-	// create a ClipAction and set it to play
-	clipAction = mix.clipAction(clip);
-	clipAction.setLoop(THREE.LoopOnce);
-	clipAction.clampWhenFinished = true;
-	clipAction.play();
+  // create a ClipAction and set it to play
+  clipAction = mix.clipAction(clip);
+  clipAction.setLoop(THREE.LoopOnce);
+  clipAction.clampWhenFinished = true;
+  clipAction.play();
 }
 
 function ZoomInHomonaBox() {
-	// create a keyframe track (i.e. a timed sequence of keyframes) for each animated property
-	// Note: the keyframe track type should correspond to the type of the property being animated
+  // create a keyframe track (i.e. a timed sequence of keyframes) for each animated property
+  // Note: the keyframe track type should correspond to the type of the property being animated
 
-	// POSITION
-	const positionKF = new THREE.VectorKeyframeTrack(
-		'.position',
-		[0, 1, 2],
-		[-1.1, 1.7, 0.12, -1.0, 1.8, 0.2, -1.6, 1.7, 0.3],
-	);
+  // POSITION
+  const positionKF = new THREE.VectorKeyframeTrack(
+    '.position',
+    [0, 1, 2],
+    [-1.1, 1.7, 0.12, -1.0, 1.8, 0.2, -1.6, 1.7, 0.3],
+  );
 
-	// SCALE
-	const scaleKF = new THREE.VectorKeyframeTrack(
-		'.scale',
-		[0, 1, 2],
-		[0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5],
-	);
-	// ROTATION
+  // SCALE
+  const scaleKF = new THREE.VectorKeyframeTrack(
+    '.scale',
+    [0, 1, 2],
+    [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5],
+  );
+  // ROTATION
 
-	// Rotation should be performed using quaternions, using a THREE.QuaternionKeyframeTrack
-	// Interpolating Euler angles (.rotation property) can be problematic and is currently not supported
+  // Rotation should be performed using quaternions, using a THREE.QuaternionKeyframeTrack
+  // Interpolating Euler angles (.rotation property) can be problematic and is currently not supported
 
-	// set up rotation about y axis for first step
-	const xAxis = new THREE.Vector3(0, 1, 0);
-	const qInitial = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.8);
-	const qMiddle = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.4);
-	const qFinal = new THREE.Quaternion().setFromAxisAngle(xAxis, 0.0); //Math.PI );
-	const quaternionKF = new THREE.QuaternionKeyframeTrack(
-		'.quaternion',
-		[0, 1, 2],
-		[
-			qInitial.x,
-			qInitial.y,
-			qInitial.z,
-			qInitial.w,
-			qMiddle.x,
-			qMiddle.y,
-			qMiddle.z,
-			qMiddle.w,
-			qFinal.x,
-			qFinal.y,
-			qFinal.z,
-			qFinal.w,
-		],
-	);
+  // set up rotation about y axis for first step
+  const xAxis = new THREE.Vector3(0, 1, 0);
+  const qInitial = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.8);
+  const qMiddle = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.4);
+  const qFinal = new THREE.Quaternion().setFromAxisAngle(xAxis, 0.0); //Math.PI );
+  const quaternionKF = new THREE.QuaternionKeyframeTrack(
+    '.quaternion',
+    [0, 1, 2],
+    [
+      qInitial.x,
+      qInitial.y,
+      qInitial.z,
+      qInitial.w,
+      qMiddle.x,
+      qMiddle.y,
+      qMiddle.z,
+      qMiddle.w,
+      qFinal.x,
+      qFinal.y,
+      qFinal.z,
+      qFinal.w,
+    ],
+  );
 
-	// COLOR
-	const colorKF = new THREE.ColorKeyframeTrack(
-		'.material.color',
-		[0, 1, 2],
-		[1, 0, 0, 0, 1, 0, 0, 0, 1],
-		THREE.InterpolateDiscrete,
-	);
+  // COLOR
+  const colorKF = new THREE.ColorKeyframeTrack(
+    '.material.color',
+    [0, 1, 2],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    THREE.InterpolateDiscrete,
+  );
 
-	// OPACITY
-	const opacityKF = new THREE.NumberKeyframeTrack(
-		'.material.opacity',
-		[0, 1, 2],
-		[1, 1, 1],
-	);
+  // OPACITY
+  const opacityKF = new THREE.NumberKeyframeTrack(
+    '.material.opacity',
+    [0, 1, 2],
+    [1, 1, 1],
+  );
 
-	// create an animation sequence with the tracks
-	// If a negative time value is passed, the duration will be calculated from the times of the passed tracks array
-	const clip = new THREE.AnimationClip('Action', 3, [
-		scaleKF,
-		positionKF,
-		quaternionKF,
-		colorKF,
-		opacityKF,
-	]);
+  // create an animation sequence with the tracks
+  // If a negative time value is passed, the duration will be calculated from the times of the passed tracks array
+  const clip = new THREE.AnimationClip('Action', 3, [
+    scaleKF,
+    positionKF,
+    quaternionKF,
+    colorKF,
+    opacityKF,
+  ]);
 
-	// setup the THREE.AnimationMixer
-	mixer = new THREE.AnimationMixer(hormona.mesh);
+  // setup the THREE.AnimationMixer
+  mixer = new THREE.AnimationMixer(games.hormona.mesh);
 
-	// create a ClipAction and set it to play
-	clipAction = mixer.clipAction(clip);
-	clipAction.setLoop(THREE.LoopOnce);
-	clipAction.clampWhenFinished = true;
-	//clipAction.enable = true;
-	clipAction.play();
+  // create a ClipAction and set it to play
+  clipAction = mixer.clipAction(clip);
+  clipAction.setLoop(THREE.LoopOnce);
+  clipAction.clampWhenFinished = true;
+  //clipAction.enable = true;
+  clipAction.play();
 
-	zoomIn = true;
-	hormona.zoom = true;
-	controls.enabled = false;
+  zoomIn = true;
+  games.hormona.zoom = true;
+  controls.enabled = false;
 }
 
 function ZoomOutHormonaBox() {
-	// create a keyframe track (i.e. a timed sequence of keyframes) for each animated property
-	// Note: the keyframe track type should correspond to the type of the property being animated
+  // create a keyframe track (i.e. a timed sequence of keyframes) for each animated property
+  // Note: the keyframe track type should correspond to the type of the property being animated
 
-	// POSITION
-	const positionKF = new THREE.VectorKeyframeTrack(
-		'.position',
-		[0, 1, 2],
-		[-1.6, 1.7, 0.3, -1.0, 1.8, 0.2, -1.1, 1.7, 0.12],
-	);
+  // POSITION
+  const positionKF = new THREE.VectorKeyframeTrack(
+    '.position',
+    [0, 1, 2],
+    [-1.6, 1.7, 0.3, -1.0, 1.8, 0.2, -1.1, 1.7, 0.12],
+  );
 
-	// SCALE
-	const scaleKF = new THREE.VectorKeyframeTrack(
-		'.scale',
-		[0, 1, 2],
-		[0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
-	);
-	// ROTATION
+  // SCALE
+  const scaleKF = new THREE.VectorKeyframeTrack(
+    '.scale',
+    [0, 1, 2],
+    [0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+  );
+  // ROTATION
 
-	// Rotation should be performed using quaternions, using a THREE.QuaternionKeyframeTrack
-	// Interpolating Euler angles (.rotation property) can be problematic and is currently not supported
+  // Rotation should be performed using quaternions, using a THREE.QuaternionKeyframeTrack
+  // Interpolating Euler angles (.rotation property) can be problematic and is currently not supported
 
-	// set up rotation about y axis for first step
-	const xAxis = new THREE.Vector3(0, 1, 0);
-	const qInitial = new THREE.Quaternion().setFromAxisAngle(xAxis, 0.0);
-	const qMiddle = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.4);
-	const qFinal = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.8); //Math.PI );
-	const quaternionKF = new THREE.QuaternionKeyframeTrack(
-		'.quaternion',
-		[0, 1, 2],
-		[
-			qInitial.x,
-			qInitial.y,
-			qInitial.z,
-			qInitial.w,
-			qMiddle.x,
-			qMiddle.y,
-			qMiddle.z,
-			qMiddle.w,
-			qFinal.x,
-			qFinal.y,
-			qFinal.z,
-			qFinal.w,
-		],
-	);
+  // set up rotation about y axis for first step
+  const xAxis = new THREE.Vector3(0, 1, 0);
+  const qInitial = new THREE.Quaternion().setFromAxisAngle(xAxis, 0.0);
+  const qMiddle = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.4);
+  const qFinal = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.8); //Math.PI );
+  const quaternionKF = new THREE.QuaternionKeyframeTrack(
+    '.quaternion',
+    [0, 1, 2],
+    [
+      qInitial.x,
+      qInitial.y,
+      qInitial.z,
+      qInitial.w,
+      qMiddle.x,
+      qMiddle.y,
+      qMiddle.z,
+      qMiddle.w,
+      qFinal.x,
+      qFinal.y,
+      qFinal.z,
+      qFinal.w,
+    ],
+  );
 
-	// COLOR
-	const colorKF = new THREE.ColorKeyframeTrack(
-		'.material.color',
-		[0, 1, 2],
-		[1, 0, 0, 0, 1, 0, 0, 0, 1],
-		THREE.InterpolateDiscrete,
-	);
+  // COLOR
+  const colorKF = new THREE.ColorKeyframeTrack(
+    '.material.color',
+    [0, 1, 2],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    THREE.InterpolateDiscrete,
+  );
 
-	// OPACITY
-	const opacityKF = new THREE.NumberKeyframeTrack(
-		'.material.opacity',
-		[0, 1, 2],
-		[1, 1, 1],
-	);
+  // OPACITY
+  const opacityKF = new THREE.NumberKeyframeTrack(
+    '.material.opacity',
+    [0, 1, 2],
+    [1, 1, 1],
+  );
 
-	// create an animation sequence with the tracks
-	// If a negative time value is passed, the duration will be calculated from the times of the passed tracks array
-	const clip = new THREE.AnimationClip('Action', 3, [
-		scaleKF,
-		positionKF,
-		quaternionKF,
-		colorKF,
-		opacityKF,
-	]);
+  // create an animation sequence with the tracks
+  // If a negative time value is passed, the duration will be calculated from the times of the passed tracks array
+  const clip = new THREE.AnimationClip('Action', 3, [
+    scaleKF,
+    positionKF,
+    quaternionKF,
+    colorKF,
+    opacityKF,
+  ]);
 
-	// setup the THREE.AnimationMixer
-	mixer = new THREE.AnimationMixer(hormona.mesh);
+  // setup the THREE.AnimationMixer
+  mixer = new THREE.AnimationMixer(games.hormona.mesh);
 
-	// create a ClipAction and set it to play
-	clipAction = mixer.clipAction(clip);
-	clipAction.setLoop(THREE.LoopOnce);
-	clipAction.clampWhenFinished = true;
-	//clipAction.enable = true;
-	clipAction.play();
+  // create a ClipAction and set it to play
+  clipAction = mixer.clipAction(clip);
+  clipAction.setLoop(THREE.LoopOnce);
+  clipAction.clampWhenFinished = true;
+  //clipAction.enable = true;
+  clipAction.play();
 
-	zoomIn = false;
-	hormona.zoom = false;
-	controls.enabled = true;
+  zoomIn = false;
+  games.hormona.zoom = false;
+  controls.enabled = true;
 }
 
-function ZoomInOutCashBox() { }
-function ZoomOutOutCashBox() { }
-function ZoomInPes94Box() { }
-function ZoomOutPes94Box() { }
-function ZoomInRioBox() { }
-function ZoomOutRioBox() { }
+function ZoomInOutCashBox() {}
+function ZoomOutOutCashBox() {}
+function ZoomInPes94Box() {}
+function ZoomOutPes94Box() {}
+function ZoomInRioBox() {}
+function ZoomOutRioBox() {}
 
 function Screen(id, x, y, z, ry) {
-	const div = document.createElement('div');
-	div.style.width = '480px';
-	div.style.height = '360px';
-	div.style.backgroundColor = '#232342';
+  const div = document.createElement('div');
+  div.style.width = '480px';
+  div.style.height = '360px';
+  div.style.backgroundColor = '#232342';
 
-	const iframe = document.createElement('iframe');
-	iframe.style.width = '480px';
-	iframe.style.height = '360px';
-	iframe.style.border = '0px';
-	iframe.src = 'https://msdos.club';
-	div.appendChild(iframe);
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '480px';
+  iframe.style.height = '360px';
+  iframe.style.border = '0px';
+  iframe.src = 'https://msdos.club';
+  div.appendChild(iframe);
 
-	const object = new CSS3DObject(div);
-	object.position.set(x, y, z);
-	object.rotation.y = ry;
+  const object = new CSS3DObject(div);
+  object.position.set(x, y, z);
+  object.rotation.y = ry;
 
-	return object;
+  return object;
 }
 
 function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

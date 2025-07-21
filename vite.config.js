@@ -11,10 +11,4 @@ export default {
         chunkSizeWarningLimit: 60000,
         assetsInlineLimit: 0
     },
-    resolve: {
-        alias: {
-            "/assets": path.resolve(__dirname, "./assets"),
-        },
-    },
-
 }
