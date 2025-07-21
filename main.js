@@ -103,6 +103,7 @@
 	let gandara = new Game("La Gandara");
 	let sk = new Game("School Kombat");
 	let biricia = new Game("La Biricia");
+	let mesh_ids = {};
 
 	let computerCPU = new SceneObject("CPU");
 	let computerScreen = new SceneObject("Screen");
@@ -274,13 +275,13 @@
 	}
 
 	function InitBoxes(){
-		Load_PES94();
-		Load_HORMONA();
-		Load_OUTCASH();
-		Load_RIO();
-		Load_GANDARA();
-		Load_SK();
-		Load_BIRICIA();
+		mesh_ids[Load_PES94().id] = pes94;
+		mesh_ids[Load_HORMONA().id] = hormona;
+		mesh_ids[Load_OUTCASH().id] = outcash;
+		mesh_ids[Load_RIO().id] = rio;
+		mesh_ids[Load_GANDARA().id] = gandara;
+		mesh_ids[Load_SK().id] = sk;
+		mesh_ids[Load_BIRICIA().id] = biricia;
 	}
 
 	function InitScreen(){
@@ -494,6 +495,7 @@
 		outcash.setRotation(0.0,-0.8,0.0);
 		outcash.setCameraOnFocus(-2,2,1);
 		scene.add(outcash.mesh);
+		return outcash.mesh;
 	}
 	// Load pes94 box
 	function Load_PES94(){
@@ -515,6 +517,7 @@
 		pes94.setRotation(0.0,-0.8,0.0);
 		pes94.setCameraOnFocus(-1.6,2,1);
 		scene.add(pes94.mesh);
+		return pes94.mesh;
 	}
 	// Load Hormona box
 	function Load_HORMONA(){
@@ -536,6 +539,7 @@
 		hormona.setRotation(0.0,-0.8,0.0);
 		hormona.setCameraOnFocus(-1.2,2,1);
 		scene.add(hormona.mesh);
+		return hormona.mesh;
 	}
 	// Load Rio box
 	function Load_RIO(){
@@ -557,6 +561,7 @@
 		rio.setRotation(0.0,-0.8,0.0);
 		rio.setCameraOnFocus(-1.0,0,1);
 		scene.add(rio.mesh);
+		return rio.mesh;
 	}
 	// Load Rio box
 	function Load_GANDARA(){
@@ -578,6 +583,7 @@
 		gandara.setRotation(0.0,-0.8,0.0);
 		gandara.setCameraOnFocus(-0.8,2,1);
 		scene.add(gandara.mesh);
+		return gandara.mesh;
 	}
 	// Load Rio box
 	function Load_SK(){
@@ -599,6 +605,7 @@
 		sk.setRotation(0.0,-0.8,0.0);
 		sk.setCameraOnFocus(-0.6,0,1);
 		scene.add(sk.mesh);
+		return sk.mesh;
 	}
 	// Load Rio box
 	function Load_BIRICIA(){
@@ -620,6 +627,7 @@
 		biricia.setRotation(0.0,-0.8,0.0);
 		biricia.setCameraOnFocus(-0.4,0,1);
 		scene.add(biricia.mesh);
+		return biricia.mesh;
 	}
 
 	//#endregion
@@ -648,59 +656,30 @@
 		intersects = raycaster.intersectObjects( scene.children, true );
 
 		if ( intersects.length > 0 ) {
-			switch(intersects[0].object.id){
-				case outcash.mesh.id:
-					if(!focused){ SetFocusOnOutCash();	} 
-					if(focused & !outcash.isFocused()){ ReleaseFocus(); }
-					if(focused & outcash.isFocused()){ ZoomInOutCashBox(); }
-					break;
-				case pes94.mesh.id:
-					if(!focused){ SetFocusOnPes94(); } 
-					if(focused & !pes94.isFocused()){ ReleaseFocus(); }
-					if(focused & pes94.isFocused()){ ZoomInPes94Box(); } 
-					break;
-				case hormona.mesh.id:
-					if(!focused){ SetFocusOnHormona(); } 
-					if(focused & !hormona.isFocused()){ ReleaseFocus(); }
-					if(focused & hormona.isFocused()){ ZoomInHomonaBox(); } 
-					break;
-				case rio.mesh.id:
-					if(!focused){ SetFocusOnRio(); } 
-					if(focused & !rio.isFocused()){ ReleaseFocus(); }
-					if(focused & rio.isFocused()){ ZoomInRioBox(); } 
-					break;
-				case gandara.mesh.id:
-					if(!focused){ SetFocusOnGandara(); } 
-					if(focused & !gandara.isFocused()){ ReleaseFocus(); }
-					if(focused & gandara.isFocused()){  } 
-					break;
-				case sk.mesh.id:
-					if(!focused){ SetFocusOnSK(); } 
-					if(focused & !sk.isFocused()){ ReleaseFocus(); }
-					if(focused & sk.isFocused()){  } 
-					break;
-				case biricia.mesh.id:
-					if(!focused){ SetFocusOnBiricia(); } 
-					if(focused & !biricia.isFocused()){ ReleaseFocus(); }
-					if(focused & biricia.isFocused()){  } 
-					break;
-				case computerCPU.id:
-					break;
-				case computerScreen.id:
-					if(!focused){SetFocusOnScreen();}
-					if(focused){ ReleaseFocus();}
-					break;
-				case poster.id:
-					if(!focused){SetFocusOnPoster();}
-					if(focused){ ReleaseFocus();}
-					break;
-				default:
-					if(hormona.isFocused()){FocusOutHormonaBox();}
-					if(focused){ReleaseFocus();}
-					break;
-			}	
+			const gameBox = mesh_ids[intersects[0].object.id];
+			gameBox && !focused && SetFocusOn(gameBox);
+			gameBox && focused && gameBox.isFocused() ? ZoomInBox(gameBox) : ReleaseFocus();
+			if (!gameBox) {
+				switch(intersects[0].object.id) {
+					case computerCPU.id:
+						break;
+					case computerScreen.id:
+						if(!focused){SetFocusOnScreen();}
+						if(focused){ ReleaseFocus();}
+						break;
+					case poster.id:
+						if(!focused){SetFocusOnPoster();}
+						if(focused){ ReleaseFocus();}
+						break;
+					default:
+						if(hormona.isFocused()){FocusOutHormonaBox();}
+						if(focused){ReleaseFocus();}
+						break;
+				}
+			}
 		} else {
-			if(hormona.isFocused()){FocusOutHormonaBox();}
+			// TODO check all focus for all boxes
+			if(hormona.isFocused()){FocusOutBox(hormona);}
 			if(focused){ReleaseFocus();}
 		}
 	}
@@ -748,62 +727,14 @@
 		}
 	}
 
-	function SetFocusOnHormona(){
-		camPosX = hormona.cameraOnFocus.x;
-		camPosZ = hormona.cameraOnFocus.z;
-		hormona.focus = true;
+	function SetFocusOn(gameBox){
+		camPosX = gameBox.cameraOnFocus.x;
+		camPosZ = gameBox.cameraOnFocus.z;
+		gameBox.focus = true;
 		focusIn = true;	
 		cameraMoving = true;
-		FocusInHomonaBox();
-	}
-
-	function SetFocusOnPes94(){
-		camPosX = pes94.cameraOnFocus.x;
-		camPosZ = pes94.cameraOnFocus.z;
-		pes94.focus = true;	
-		focusIn = true;	
-		cameraMoving = true;
-	}
-
-	function SetFocusOnOutCash(){
-		camPosX = outcash.cameraOnFocus.x;
-		camPosZ = outcash.cameraOnFocus.z;
-		outcash.focus = true;	
-		focusIn = true;	
-		cameraMoving = true;	
-	}
-
-	function SetFocusOnRio(){
-		camPosX = rio.cameraOnFocus.x;
-		camPosZ = rio.cameraOnFocus.z;
-		rio.focus = true;	
-		focusIn = true;	
-		cameraMoving = true;
-	}
-
-	function SetFocusOnGandara(){
-		camPosX = gandara.cameraOnFocus.x;
-		camPosZ = gandara.cameraOnFocus.z;
-		gandara.focus = true;
-		focusIn = true;		
-		cameraMoving = true;
-	}
-
-	function SetFocusOnSK(){
-		camPosX = sk.cameraOnFocus.x;
-		camPosZ = sk.cameraOnFocus.z;
-		sk.focus = true;		
-		focusIn = true;
-		cameraMoving = true;
-	}
-
-	function SetFocusOnBiricia(){
-		camPosX = biricia.cameraOnFocus.x;
-		camPosZ = biricia.cameraOnFocus.z;
-		biricia.focus = true;	
-		focusIn = true;	
-		cameraMoving = true;
-	}
+		FocusInBox(gameBox);
+	}	
 
 	function SetFocusOnScreen(){
 		camPosX = 0.1;
@@ -875,6 +806,17 @@
         controls.update(); 
 	}
 
+	function showLabel(gameObj) {
+		labelDiv.textContent = gameObj.name;
+		label.position.set(
+			gameObj.mesh.position.x,
+			gameObj.mesh.position.y + 0.2,
+			gameObj.mesh.position.z + 0.2
+		);
+		label.visible = true;
+		if(!focused){gameObj.mesh.getWorldPosition( focus );}
+	}
+
 	function ObjectDetection(){
 		if(!cameraMoving){controls.target.lerp( focus, 0.001 );}
 		else{controls.target.lerp( focus, 0.03 );}
@@ -888,114 +830,26 @@
 		// Object detection when zoom is not active
 		if(!zoomed & !cameraMoving){
 			if ( intersects.length > 0 ) {
-				switch(intersects[0].object.id){
-					case outcash.mesh.id:
-						// Show label
-      					labelDiv.textContent = outcash.name;
-      					label.position.set(
-        					outcash.mesh.position.x,
-        					outcash.mesh.position.y + 0.2,
-        					outcash.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){ outcash.mesh.getWorldPosition( focus );}
-						break;
-					case pes94.mesh.id:
-						// Show label
-      					labelDiv.textContent = pes94.name;
-      					label.position.set(
-        					pes94.mesh.position.x,
-        					pes94.mesh.position.y + 0.2,
-        					pes94.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){pes94.mesh.getWorldPosition( focus );}
-						break;
-					case hormona.mesh.id:
-						labelDiv.textContent = hormona.name;
-      					label.position.set(
-        					hormona.mesh.position.x,
-        					hormona.mesh.position.y + 0.2,
-        					hormona.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){hormona.mesh.getWorldPosition( focus );}
-						break;
-					case rio.mesh.id:
-						labelDiv.textContent = rio.name;
-      					label.position.set(
-        					rio.mesh.position.x,
-        					rio.mesh.position.y + 0.2,
-        					rio.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){rio.mesh.getWorldPosition( focus );}
-						break;
-					case gandara.mesh.id:
-						labelDiv.textContent = gandara.name;
-      					label.position.set(
-        					gandara.mesh.position.x,
-        					gandara.mesh.position.y + 0.2,
-        					gandara.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){gandara.mesh.getWorldPosition( focus );}
-						break;
-					case sk.mesh.id:
-						labelDiv.textContent = sk.name;
-      					label.position.set(
-        					sk.mesh.position.x,
-        					sk.mesh.position.y + 0.2,
-        					sk.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){sk.mesh.getWorldPosition( focus );}
-						break;
-					case biricia.mesh.id:
-						labelDiv.textContent = biricia.name;
-      					label.position.set(
-        					biricia.mesh.position.x,
-        					biricia.mesh.position.y + 0.2,
-        					biricia.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){biricia.mesh.getWorldPosition( focus );}
-						break;
-					case computerCPU.id:
-						labelDiv.textContent = computerCPU.name;
-      					label.position.set(
-        					computerCPU.mesh.position.x,
-        					computerCPU.mesh.position.y + 0.2,
-        					computerCPU.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						computerCPU.mesh.getWorldPosition( focus );
-						break;
-					case computerScreen.id:
-						labelDiv.textContent = computerScreen.name;
-      					label.position.set(
-        					computerScreen.mesh.position.x,
-        					computerScreen.mesh.position.y + 0.4,
-        					computerScreen.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){computerScreen.mesh.getWorldPosition( focus );}
-						break;
-					case poster.id:
-						labelDiv.textContent = poster.name;
-      					label.position.set(
-        					poster.mesh.position.x,
-        					poster.mesh.position.y + 0.6,
-        					poster.mesh.position.z + 0.2
-      					);
-						label.visible = true;
-						if(!focused){poster.mesh.getWorldPosition( focus );}
-						break;
-					default:
-						// Hide label
-						label.visible = false;
-						//if(!focused){scene.getWorldPosition( focus );}
-						break;
+				const gameObj = mesh_ids[intersects[0].object.id];
+				gameObj && showLabel(gameObj);
+
+				if (!gameObj) {
+					switch(intersects[0].object.id){					
+						case computerCPU.id:
+							showLabel(computerCPU);
+							break;
+						case computerScreen.id:
+							showLabel(computerScreen);
+							break;
+						case poster.id:
+							showLabel(poster);
+							break;
+						default:
+							// Hide label
+							label.visible = false;
+							//if(!focused){scene.getWorldPosition( focus );}
+							break;
+					}
 				}
 			} else {
 				// Hide label
@@ -1010,18 +864,18 @@
 		if (mix) {mix.update(delta);}
 	}
 
-	function FocusInHomonaBox(){
+	function FocusInBox(gameBox){
 		
 		// Hormona box movement
-		const pos = new THREE.VectorKeyframeTrack( '.position', [ 0, 1, 2 ], [ hormona.mesh.position.x, hormona.mesh.position.y, hormona.mesh.position.z, hormona.mesh.position.x + 0.2, hormona.mesh.position.y, hormona.mesh.position.z + 0.2, hormona.mesh.position.x + 0.2, hormona.mesh.position.y, hormona.mesh.position.z + 1 ] );
-		const scale = new THREE.VectorKeyframeTrack( '.scale', [ 0, 1, 2 ], [ hormona.mesh.scale.x, hormona.mesh.scale.y, hormona.mesh.scale.z, hormona.mesh.scale.x, hormona.mesh.scale.y, hormona.mesh.scale.z, hormona.mesh.scale.x , hormona.mesh.scale.y , hormona.mesh.scale.z ] );
+		const pos = new THREE.VectorKeyframeTrack( '.position', [ 0, 1, 2 ], [ gameBox.mesh.position.x, gameBox.mesh.position.y, gameBox.mesh.position.z, gameBox.mesh.position.x + 0.2, gameBox.mesh.position.y, hormona.mesh.position.z + 0.2, gameBox.mesh.position.x + 0.2, gameBox.mesh.position.y, hormona.mesh.position.z + 1 ] );
+		const scale = new THREE.VectorKeyframeTrack( '.scale', [ 0, 1, 2 ], [ gameBox.mesh.scale.x, gameBox.mesh.scale.y, gameBox.mesh.scale.z, gameBox.mesh.scale.x, gameBox.mesh.scale.y, gameBox.mesh.scale.z, hormona.mesh.scale.x , gameBox.mesh.scale.y , gameBox.mesh.scale.z ] );
 		const axis = new THREE.Vector3( 0, 1, 0 );
 		const inital_q = new THREE.Quaternion().setFromAxisAngle( axis, -0.8 );
 		const middle_q = new THREE.Quaternion().setFromAxisAngle( axis, -0.4 );
 		const final_q = new THREE.Quaternion().setFromAxisAngle( axis, 0.0 );
 		const quaternion = new THREE.QuaternionKeyframeTrack( '.quaternion', [ 0, 1, 2 ], [ inital_q.x, inital_q.y, inital_q.z, inital_q.w, middle_q.x, middle_q.y, middle_q.z, middle_q.w, final_q.x, final_q.y, final_q.z, final_q.w ] );
 		const clip = new THREE.AnimationClip( 'Action', 3, [ scale, pos, quaternion ] );
-		mix = new THREE.AnimationMixer( hormona.mesh );
+		mix = new THREE.AnimationMixer( gameBox.mesh );
 
 		// create a ClipAction and set it to play
 		clipAction = mix.clipAction( clip );
@@ -1030,17 +884,17 @@
 		clipAction.play();
 	}
 
-	function FocusOutHormonaBox(){
+	function FocusOutBox(gameBox){
 		// Hormona box movement
-		const pos = new THREE.VectorKeyframeTrack( '.position', [ 0, 1, 2 ], [ hormona.mesh.position.x, hormona.mesh.position.y, hormona.mesh.position.z, hormona.mesh.position.x, hormona.mesh.position.y, hormona.mesh.position.z - 0.8, hormona.mesh.position.x - 0.2, hormona.mesh.position.y, hormona.mesh.position.z - 1.0 ] );
-		const scale = new THREE.VectorKeyframeTrack( '.scale', [ 0, 1, 2 ], [ hormona.mesh.scale.x, hormona.mesh.scale.y, hormona.mesh.scale.z, hormona.mesh.scale.x, hormona.mesh.scale.y, hormona.mesh.scale.z , hormona.mesh.scale.x , hormona.mesh.scale.y , hormona.mesh.scale.z ] );
+		const pos = new THREE.VectorKeyframeTrack( '.position', [ 0, 1, 2 ], [ gameBox.mesh.position.x, gameBox.mesh.position.y, gameBox.mesh.position.z, gameBox.mesh.position.x, gameBox.mesh.position.y, gameBox.mesh.position.z - 0.8, gameBox.mesh.position.x - 0.2, gameBox.mesh.position.y, gameBox.mesh.position.z - 1.0 ] );
+		const scale = new THREE.VectorKeyframeTrack( '.scale', [ 0, 1, 2 ], [ gameBox.mesh.scale.x, gameBox.mesh.scale.y, gameBox.mesh.scale.z, gameBox.mesh.scale.x, gameBox.mesh.scale.y, gameBox.mesh.scale.z , gameBox.mesh.scale.x , gameBox.mesh.scale.y , gameBox.mesh.scale.z ] );
 		const axis = new THREE.Vector3( 0, 1, 0 );
 		const inital_q = new THREE.Quaternion().setFromAxisAngle( axis, 0.0 );
 		const middle_q = new THREE.Quaternion().setFromAxisAngle( axis, -0.4 );
 		const final_q = new THREE.Quaternion().setFromAxisAngle( axis, -0.8 );
 		const quaternion = new THREE.QuaternionKeyframeTrack( '.quaternion', [ 0, 1, 2 ], [ inital_q.x, inital_q.y, inital_q.z, inital_q.w, middle_q.x, middle_q.y, middle_q.z, middle_q.w, final_q.x, final_q.y, final_q.z, final_q.w ] );
 		const clip = new THREE.AnimationClip( 'Action', 3, [ scale, pos, quaternion ] );
-		mix = new THREE.AnimationMixer( hormona.mesh );
+		mix = new THREE.AnimationMixer( gameBox.mesh );
 
 		// create a ClipAction and set it to play
 		clipAction = mix.clipAction( clip );
@@ -1048,6 +902,52 @@
   		clipAction.clampWhenFinished = true;
 		clipAction.play();
 
+	}
+
+	function ZoomInBox(gameBox) {
+		// create a keyframe track (i.e. a timed sequence of keyframes) for each animated property
+		// Note: the keyframe track type should correspond to the type of the property being animated
+
+		// POSITION
+		const positionKF = new THREE.VectorKeyframeTrack( '.position', [ 0, 1, 2 ], [ -1.1, 1.7, 0.12, -1.0, 1.8, 0.20, -1.6, 1.7, 0.3 ] );
+
+		// SCALE
+		const scaleKF = new THREE.VectorKeyframeTrack( '.scale', [ 0, 1, 2 ], [ 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.5, 0.5, 0.5 ] );
+		// ROTATION
+				
+		// Rotation should be performed using quaternions, using a THREE.QuaternionKeyframeTrack
+		// Interpolating Euler angles (.rotation property) can be problematic and is currently not supported
+
+		// set up rotation about y axis for first step 
+		const xAxis = new THREE.Vector3( 0, 1, 0 );
+		const qInitial = new THREE.Quaternion().setFromAxisAngle( xAxis, -0.8 );
+		const qMiddle = new THREE.Quaternion().setFromAxisAngle( xAxis, -0.4 );
+		const qFinal = new THREE.Quaternion().setFromAxisAngle( xAxis, 0.0); //Math.PI );
+		const quaternionKF = new THREE.QuaternionKeyframeTrack( '.quaternion', [ 0, 1, 2 ], [ qInitial.x, qInitial.y, qInitial.z, qInitial.w, qMiddle.x, qMiddle.y, qMiddle.z, qMiddle.w, qFinal.x, qFinal.y, qFinal.z, qFinal.w ] );
+
+		// COLOR
+		const colorKF = new THREE.ColorKeyframeTrack( '.material.color', [ 0, 1, 2 ], [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ], THREE.InterpolateDiscrete );
+
+		// OPACITY
+		const opacityKF = new THREE.NumberKeyframeTrack( '.material.opacity', [ 0, 1, 2 ], [ 1, 1, 1 ] );
+
+		// create an animation sequence with the tracks
+		// If a negative time value is passed, the duration will be calculated from the times of the passed tracks array
+		const clip = new THREE.AnimationClip( 'Action', 3, [ scaleKF, positionKF, quaternionKF, colorKF, opacityKF ] );
+
+		// setup the THREE.AnimationMixer
+		mixer = new THREE.AnimationMixer( gameBox.mesh );
+
+		// create a ClipAction and set it to play
+		clipAction = mixer.clipAction( clip );
+		clipAction.setLoop(THREE.LoopOnce);
+  		clipAction.clampWhenFinished = true;
+  		//clipAction.enable = true;
+		clipAction.play();
+
+		zoomIn = true;
+		gameBox.zoom = true;
+		controls.enabled = false;
 	}
 
 	function ZoomInHomonaBox(){
