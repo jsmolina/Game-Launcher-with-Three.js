@@ -1,0 +1,12 @@
+# Ignore artifacts:
+build
+dist
+node_modules
+
+# Ignore version control directories:
+.git
+
+# Ignore package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml 
