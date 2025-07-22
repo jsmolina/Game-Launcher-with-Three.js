@@ -873,7 +873,7 @@ function ObjectDetection() {
 
   // Object detection when zoom is not active
   if (!zoomed & !cameraMoving) {
-    if (intersects.length > 0) {
+    if (intersects.length > 0 && intersects[0].object.id !== axesHelper.id) {
       const gameBox = Object.values(games).find((v) => intersects[0].object.id == v.mesh.id? v : undefined);
       gameBox && showLabel(gameBox);
 
