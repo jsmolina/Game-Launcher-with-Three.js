@@ -1160,6 +1160,92 @@ function ZoomInBox(gameBox) {
   controls.enabled = false;
 }
 
+function ZoomOutBox(gameBox) {
+  // create a keyframe track (i.e. a timed sequence of keyframes) for each animated property
+  // Note: the keyframe track type should correspond to the type of the property being animated
+
+  // POSITION
+  const positionKF = new THREE.VectorKeyframeTrack(
+    '.position',
+    [0, 1, 2],
+    [-1.6, 1.7, 0.3, -1.0, 1.8, 0.2, -1.1, 1.7, 0.12],
+  );
+
+  // SCALE
+  const scaleKF = new THREE.VectorKeyframeTrack(
+    '.scale',
+    [0, 1, 2],
+    [0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+  );
+  // ROTATION
+
+  // Rotation should be performed using quaternions, using a THREE.QuaternionKeyframeTrack
+  // Interpolating Euler angles (.rotation property) can be problematic and is currently not supported
+
+  // set up rotation about y axis for first step
+  const xAxis = new THREE.Vector3(0, 1, 0);
+  const qInitial = new THREE.Quaternion().setFromAxisAngle(xAxis, 0.0);
+  const qMiddle = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.4);
+  const qFinal = new THREE.Quaternion().setFromAxisAngle(xAxis, -0.8); //Math.PI );
+  const quaternionKF = new THREE.QuaternionKeyframeTrack(
+    '.quaternion',
+    [0, 1, 2],
+    [
+      qInitial.x,
+      qInitial.y,
+      qInitial.z,
+      qInitial.w,
+      qMiddle.x,
+      qMiddle.y,
+      qMiddle.z,
+      qMiddle.w,
+      qFinal.x,
+      qFinal.y,
+      qFinal.z,
+      qFinal.w,
+    ],
+  );
+
+  // COLOR
+  const colorKF = new THREE.ColorKeyframeTrack(
+    '.material.color',
+    [0, 1, 2],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    THREE.InterpolateDiscrete,
+  );
+
+  // OPACITY
+  const opacityKF = new THREE.NumberKeyframeTrack(
+    '.material.opacity',
+    [0, 1, 2],
+    [1, 1, 1],
+  );
+
+  // create an animation sequence with the tracks
+  // If a negative time value is passed, the duration will be calculated from the times of the passed tracks array
+  const clip = new THREE.AnimationClip('Action', 3, [
+    scaleKF,
+    positionKF,
+    quaternionKF,
+    colorKF,
+    opacityKF,
+  ]);
+
+  // setup the THREE.AnimationMixer
+  mixer = new THREE.AnimationMixer(gameBox.mesh);
+
+  // create a ClipAction and set it to play
+  clipAction = mixer.clipAction(clip);
+  clipAction.setLoop(THREE.LoopOnce);
+  clipAction.clampWhenFinished = true;
+  //clipAction.enable = true;
+  clipAction.play();
+
+  zoomIn = false;
+  gameBox.zoom = false;
+  controls.enabled = true;
+}
+
 function Screen(id, x, y, z, ry) {
   const div = document.createElement('div');
   div.style.width = '480px';
